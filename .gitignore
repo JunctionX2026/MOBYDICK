@@ -3,7 +3,9 @@ dist/
 build/
 coverage/
 .next/
+.open-next/
 out/
+.wrangler/
 .turbo/
 .nx/
 *.tsbuildinfo

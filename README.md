@@ -23,6 +23,15 @@ pnpm dev
 
 Node 22 이상과 pnpm이 필요해요.
 
+## 배포
+
+웹 앱은 Cloudflare Workers에서 돌아가요. https://mobydick-web.haklee.workers.dev
+
+```bash
+pnpm --filter @mobydick/web preview   # 워커 런타임에서 로컬 확인
+pnpm --filter @mobydick/web deploy    # 빌드 후 배포
+```
+
 ## 어디를 보나요
 
 | 알고 싶은 내용            | 먼저 볼 곳                                     |

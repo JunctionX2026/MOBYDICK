@@ -23,7 +23,17 @@ Next.js App Router로 만드는 배포 단위예요. 조립과 표현만 담당�
 - 배열과 객체 조작은 `es-toolkit`을 써요.
 - 판별 유니온과 다중 조건 분기는 `ts-pattern`의 `match`로 표현하고 `exhaustive()`로 닫아요.
 
+## 배포
+
+Cloudflare Workers에 `@opennextjs/cloudflare`로 올려요. 워커 이름은 `mobydick-web`이에요.
+
+- `pnpm --filter @mobydick/web preview`로 workerd에서 먼저 확인하고 `deploy`로 올려요. `next build`만으로는 워커 번들이 안 나와요.
+- `export const runtime = "edge"`를 쓰지 않아요. 이 어댑터가 지원하지 않아요.
+- `wrangler.jsonc`의 `main`과 `assets`는 빌드 산출 경로라서 바꾸지 않아요.
+- 지금 앱은 전부 정적이라 증분 캐시(R2)와 self-reference 바인딩을 두지 않았어요. ISR이나 `revalidate`를 쓰기 시작하면 그때 추가해요.
+
 ## 검증
 
 - `pnpm --filter @mobydick/web typecheck`
 - `pnpm --filter @mobydick/web build`
+- `pnpm --filter @mobydick/web preview` (워커 런타임 확인)

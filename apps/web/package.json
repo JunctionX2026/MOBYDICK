@@ -9,10 +9,14 @@
     "start": "next start",
     "lint": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
-    "test": "echo \"no web unit tests yet\""
+    "test": "echo \"no web unit tests yet\"",
+    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
   },
   "dependencies": {
     "@mobydick/design-system": "workspace:*",
+    "@opennextjs/cloudflare": "^1.20.2",
     "es-toolkit": "^1.51.0",
     "next": "16.3.2",
     "react": "19.2.8",
@@ -26,6 +30,7 @@
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
     "tailwindcss": "^4.1.18",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "wrangler": "^4.125.0"
   }
 }
