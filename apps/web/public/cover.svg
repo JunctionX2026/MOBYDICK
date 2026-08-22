@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 640" fill="none" role="img" aria-label="">
+  <defs>
+    <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0b2540" />
+      <stop offset="55%" stop-color="#123a63" />
+      <stop offset="100%" stop-color="#0a1b2e" />
+    </linearGradient>
+    <linearGradient id="beam" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0%" stop-color="#7cc4ff" stop-opacity="0.35" />
+      <stop offset="100%" stop-color="#7cc4ff" stop-opacity="0" />
+    </linearGradient>
+    <linearGradient id="wave" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#8ed0ff" stop-opacity="0.08" />
+      <stop offset="50%" stop-color="#8ed0ff" stop-opacity="0.3" />
+      <stop offset="100%" stop-color="#8ed0ff" stop-opacity="0.08" />
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%" stop-color="#bfe4ff" stop-opacity="0.9" />
+      <stop offset="100%" stop-color="#bfe4ff" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+
+  <rect width="1200" height="640" fill="url(#sea)" />
+  <path d="M300 0 L520 0 L360 640 L60 640 Z" fill="url(#beam)" />
+  <path d="M720 0 L860 0 L820 640 L560 640 Z" fill="url(#beam)" opacity="0.6" />
+
+  <g stroke="url(#wave)" stroke-width="2" fill="none">
+    <path d="M-40 210 C 160 160, 280 260, 480 210 S 800 160, 1000 210 S 1240 260, 1240 210" />
+    <path d="M-40 268 C 180 218, 300 318, 500 268 S 820 218, 1020 268 S 1240 318, 1240 268" />
+    <path d="M-40 326 C 200 276, 320 376, 520 326 S 840 276, 1040 326 S 1240 376, 1240 326" />
+  </g>
+
+  <g stroke="#8ed0ff" stroke-opacity="0.45" stroke-width="1.5" fill="none">
+    <path d="M210 470 C 300 470, 300 386, 400 386" />
+    <path d="M400 386 C 520 386, 520 470, 640 470" />
+    <path d="M640 470 C 760 470, 760 386, 880 386" />
+    <path d="M400 386 C 520 386, 540 300, 660 300" />
+  </g>
+
+  <g>
+    <circle cx="210" cy="470" r="46" fill="url(#glow)" />
+    <circle cx="400" cy="386" r="52" fill="url(#glow)" />
+    <circle cx="640" cy="470" r="46" fill="url(#glow)" />
+    <circle cx="880" cy="386" r="52" fill="url(#glow)" />
+    <circle cx="660" cy="300" r="40" fill="url(#glow)" />
+  </g>
+
+  <g fill="#102e4d" stroke="#9ad6ff" stroke-opacity="0.7" stroke-width="1.5">
+    <rect x="168" y="450" width="84" height="40" rx="12" />
+    <rect x="352" y="366" width="96" height="40" rx="12" />
+    <rect x="598" y="450" width="84" height="40" rx="12" />
+    <rect x="832" y="366" width="96" height="40" rx="12" />
+    <rect x="620" y="282" width="80" height="36" rx="12" />
+  </g>
+  <g fill="#9ad6ff" fill-opacity="0.75">
+    <rect x="182" y="464" width="40" height="5" rx="2.5" />
+    <rect x="182" y="474" width="24" height="5" rx="2.5" />
+    <rect x="366" y="380" width="52" height="5" rx="2.5" />
+    <rect x="366" y="390" width="30" height="5" rx="2.5" />
+    <rect x="612" y="464" width="44" height="5" rx="2.5" />
+    <rect x="612" y="474" width="26" height="5" rx="2.5" />
+    <rect x="846" y="380" width="52" height="5" rx="2.5" />
+    <rect x="846" y="390" width="34" height="5" rx="2.5" />
+    <rect x="634" y="295" width="40" height="5" rx="2.5" />
+  </g>
+
+  <g fill="#e8f5ff" fill-opacity="0.92">
+    <path d="M986 512c-18-30-52-46-92-46-46 0-84 20-112 52-8 9-22 6-25-6-6-24-6-48 0-72 3-13 21-14 27-2 8 16 20 28 36 36-12-40-6-76 18-108 7-9 21-6 24 5 14 44 42 74 84 90 22 8 40 22 52 42 6 10-5 20-12 9z" opacity="0.28" />
+  </g>
+
+  <g fill="#e8f5ff">
+    <circle cx="1042" cy="132" r="3" opacity="0.6" />
+    <circle cx="1096" cy="196" r="2" opacity="0.4" />
+    <circle cx="140" cy="112" r="2.5" opacity="0.5" />
+    <circle cx="86" cy="188" r="2" opacity="0.35" />
+    <circle cx="960" cy="88" r="2" opacity="0.45" />
+  </g>
+</svg>

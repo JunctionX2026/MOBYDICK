@@ -2,6 +2,7 @@
 @import "@mobydick/design-system/styles.css";
 
 @source "../../../../packages/design-system/src";
+@source "../../../../packages/icon/src";
 
 @layer base {
   html {
@@ -10,10 +11,5 @@
 
   html[data-theme="dark"] {
     color-scheme: dark;
-  }
-
-  body {
-    background-color: var(--moby-color-bg-layer-basement);
-    color: var(--moby-color-fg-neutral);
   }
 }

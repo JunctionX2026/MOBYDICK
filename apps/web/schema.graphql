@@ -1,0 +1,113 @@
+"""
+A stored question and the workflow that answers it.
+"""
+type Project {
+  id: ID!
+  name: String!
+  question: String!
+  phase: ProjectPhase!
+  workflow: Workflow!
+  deploymentId: ID
+  createdAt: String!
+  updatedAt: String!
+}
+
+"""
+Derived from the content of a project. Never stored on its own.
+"""
+enum ProjectPhase {
+  DISCOVER
+  COMPOSE
+  SERVE
+}
+
+type Workflow {
+  nodes: [WorkflowNode!]!
+  links: [WorkflowLink!]!
+}
+
+type WorkflowNode {
+  id: ID!
+  kind: WorkflowNodeKind!
+  title: String!
+  subtitle: String
+  position: Position!
+}
+
+enum WorkflowNodeKind {
+  SOURCE
+  TRANSFORM
+  JOIN
+  OUTPUT
+}
+
+type Position {
+  x: Float!
+  y: Float!
+}
+
+type WorkflowLink {
+  id: ID!
+  source: ID!
+  target: ID!
+}
+
+"""
+Rows that fail validation are dropped, so the list carries how many were
+dropped instead of pretending the store was clean.
+"""
+type ProjectList {
+  projects: [Project!]!
+  droppedCount: Int!
+}
+
+type Query {
+  projectList: ProjectList!
+  project(id: ID!): Project
+}
+
+input CreateProjectInput {
+  question: String!
+  name: String
+}
+
+input RenameProjectInput {
+  id: ID!
+  name: String!
+}
+
+input PositionInput {
+  x: Float!
+  y: Float!
+}
+
+input WorkflowNodeInput {
+  id: ID!
+  kind: WorkflowNodeKind!
+  title: String!
+  subtitle: String
+  position: PositionInput!
+}
+
+input WorkflowLinkInput {
+  id: ID!
+  source: ID!
+  target: ID!
+}
+
+input SaveWorkflowInput {
+  id: ID!
+  nodes: [WorkflowNodeInput!]!
+  links: [WorkflowLinkInput!]!
+}
+
+type DeleteProjectPayload {
+  deletedProjectId: ID!
+}
+
+type Mutation {
+  createProject(input: CreateProjectInput!): Project!
+  renameProject(input: RenameProjectInput!): Project!
+  saveWorkflow(input: SaveWorkflowInput!): Project!
+  deleteProject(id: ID!): DeleteProjectPayload!
+}

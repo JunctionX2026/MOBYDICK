@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { AppSidebar } from "./_components/app-sidebar";
+import { RelayProvider } from "@/relay/relay-provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -11,9 +11,8 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="ko">
-      <body className="flex h-dvh overflow-hidden antialiased">
-        <AppSidebar />
-        <div className="flex-1 overflow-y-auto">{children}</div>
+      <body className="bg-bg-layer-default text-fg-neutral min-h-dvh antialiased">
+        <RelayProvider>{children}</RelayProvider>
       </body>
     </html>
   );

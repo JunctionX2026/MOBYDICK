@@ -12,17 +12,26 @@
     "test": "echo \"no web unit tests yet\"",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
-    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
+    "graphql:types": "node scripts/write-type-defs.mjs",
+    "relay": "pnpm run graphql:types && relay-compiler",
+    "db:migrate": "wrangler d1 migrations apply mobydick --remote",
+    "db:migrate:local": "wrangler d1 migrations apply mobydick --local"
   },
   "dependencies": {
     "@mobydick/design-system": "workspace:*",
     "@mobydick/domain": "workspace:*",
+    "@mobydick/icon": "workspace:*",
     "@opennextjs/cloudflare": "^1.20.2",
     "es-toolkit": "^1.51.0",
+    "graphql": "^16.14.2",
+    "motion": "^13.1.1",
     "next": "16.3.2",
     "react": "19.2.8",
     "react-dom": "19.2.8",
+    "react-relay": "^21.0.1",
     "react-simplikit": "^0.0.53",
+    "relay-runtime": "^21.0.1",
     "ts-pattern": "^5.9.0"
   },
   "devDependencies": {
@@ -30,6 +39,7 @@
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
+    "relay-compiler": "^21.0.1",
     "tailwindcss": "^4.1.18",
     "typescript": "^5.9.3",
     "wrangler": "^4.125.0"

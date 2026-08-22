@@ -1,25 +1,9 @@
 import { isUlid, ulid } from "./ulid";
+import { EMPTY_WORKFLOW, parseWorkflow, type Workflow } from "./workflow";
 
 export type ProjectId = string;
 
 export type ProjectPhase = "discover" | "compose" | "serve";
-
-/**
- * The full shape belongs to specs/features/011-seam-workflow-to-deployment.md.
- * A project only needs to know whether the canvas has anything in it.
- */
-export interface WorkflowNode {
-  id: string;
-}
-
-export interface WorkflowLink {
-  id: string;
-}
-
-export interface Workflow {
-  nodes: WorkflowNode[];
-  links: WorkflowLink[];
-}
 
 export interface Project {
   id: ProjectId;
@@ -64,7 +48,7 @@ export function createProject({
     id,
     name: name?.trim() || projectNameFromQuestion(trimmed),
     question: trimmed,
-    workflow: { nodes: [], links: [] },
+    workflow: EMPTY_WORKFLOW,
     deploymentId: null,
     createdAt: timestamp,
     updatedAt: timestamp,
@@ -91,29 +75,10 @@ function isTimestamp(value: unknown): value is string {
   return typeof value === "string" && !Number.isNaN(Date.parse(value));
 }
 
-function parseIdentified(value: unknown): { id: string } | null {
-  return isRecord(value) && isNonEmptyString(value.id) ? { id: value.id } : null;
-}
-
-function parseWorkflow(value: unknown): Workflow | null {
-  if (!isRecord(value) || !Array.isArray(value.nodes) || !Array.isArray(value.links)) {
-    return null;
-  }
-
-  const nodes = value.nodes.map(parseIdentified);
-  const links = value.links.map(parseIdentified);
-
-  if (nodes.includes(null) || links.includes(null)) {
-    return null;
-  }
-
-  return { nodes: nodes as WorkflowNode[], links: links as WorkflowLink[] };
-}
-
 /**
- * Local storage is outside the type system, so a stored project is validated
- * rather than asserted. Returns null so the caller can drop the entry and tell
- * the user how many were dropped.
+ * Storage is outside the type system, so a stored project is validated rather
+ * than asserted. Returns null so the caller can drop the entry and tell the
+ * user how many were dropped.
  */
 export function parseProject(value: unknown): Project | null {
   if (!isRecord(value)) {
@@ -134,7 +99,7 @@ export function parseProject(value: unknown): Project | null {
     return null;
   }
 
-  if (deploymentId !== null && !isNonEmptyString(deploymentId)) {
+  if (deploymentId != null && !isNonEmptyString(deploymentId)) {
     return null;
   }
 
@@ -149,12 +114,16 @@ export function parseProject(value: unknown): Project | null {
     name,
     question,
     workflow: parsedWorkflow,
-    deploymentId,
+    deploymentId: deploymentId ?? null,
     createdAt,
     updatedAt,
   };
 }
 
-export function touchProject(project: Project, changes: Partial<Project>, now = new Date()): Project {
+export function touchProject(
+  project: Project,
+  changes: Partial<Project>,
+  now = new Date(),
+): Project {
   return { ...project, ...changes, updatedAt: now.toISOString() };
 }
