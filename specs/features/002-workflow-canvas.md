@@ -62,6 +62,38 @@
 - 출력은 [`011-seam-workflow-to-deployment.md`](011-seam-workflow-to-deployment.md)의 `Workflow`예요.
 - `OperationSpec`은 선언적이어야 해요. 코드 문자열과 임의 표현식을 담지 않아요.
 
+### 캔버스 레이아웃
+
+`Workflow` 중 캔버스가 소유하는 부분이에요. 배포에 필요한 `outputNodeId`와 `parameters[]`는 [`011-seam-workflow-to-deployment.md`](011-seam-workflow-to-deployment.md)가 정해요.
+
+```ts
+type WorkflowNodeKind = "source" | "transform" | "join" | "output";
+
+interface WorkflowNode {
+  id: string;
+  kind: WorkflowNodeKind;
+  title: string;
+  subtitle: string | null;
+  position: { x: number; y: number };
+}
+
+interface WorkflowLink {
+  id: string;
+  source: string;
+  target: string;
+}
+
+interface Workflow {
+  nodes: WorkflowNode[];
+  links: WorkflowLink[];
+}
+```
+
+- `position`은 화면 좌표가 아니라 캔버스 좌표예요. 확대와 이동은 저장하지 않아요.
+- 없는 노드를 가리키는 링크와 자기 자신으로 가는 링크는 검증에서 막혀요.
+- 캔버스 상태는 통째로 덮어써요. 부분 갱신을 하지 않아서 순서 충돌이 생기지 않아요.
+- 캔버스는 라이브러리 없이 직접 그려요. 노드 카드, 베지어 링크, 이동과 확대만 필요하고 이 정도는 의존성을 늘릴 만큼 크지 않아요.
+
 ## 인수 기준
 
 - [ ] 링크에 자연어를 쓰면 조인 키, 기준 연도, 변환 방식이 명시된 스펙으로 보여요.
@@ -95,8 +127,6 @@
 | 데모 질문 1개                                 | 구현 착수 전        |           |
 | `OperationSpec`이 지원하는 연산 목록          | 데모 질문 확정 후   |           |
 | "급감", "급락", "급증"의 실제 임계값          | 실데이터 확인 후    |           |
-| 캔버스 라이브러리 선택                        | 구현 착수 전        |           |
-| 워크플로 저장 위치 (로컬 / 서버)              | 배포 스펙 확정 시   |           |
 
 ## 근거
 
