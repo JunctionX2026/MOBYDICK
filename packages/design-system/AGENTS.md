@@ -30,9 +30,11 @@
 
 ## 컴포넌트 규칙
 
-- 스타일은 `src/recipes`에, 마크업과 동작은 `src/components`에 둬요. 컴포넌트 파일에서 `cva`를 호출하지 않아요.
-- 레시피는 `cva`로 작성하고 `variants`, `compoundVariants`, `defaultVariants`를 명시해요.
-- 여러 부분으로 구성된 컴포넌트는 레시피를 slot별로 나누고(`calloutRootRecipe`, `calloutIconRecipe`) 컴포넌트는 `Object.assign`으로 묶어요.
+- 스타일은 `src/recipes`에, 마크업과 동작은 `src/components`에 둬요. 컴포넌트 파일에서 `variants`를 호출하지 않아요.
+- 레시피는 `src/variants.ts`의 `variants`로 작성하고 `base`, `variants`, `defaults`를 명시해요. 두 variant가 함께 있을 때만 필요한 클래스는 `compound`에 둬요.
+- variant 조합이 표를 이루면(badge의 tone x emphasis) 표를 `satisfies Record<...>`로 선언하고 `compound`를 거기서 만들어요. 손으로 나열하면 빠진 조합을 아무도 못 잡아요.
+- variant가 없는 slot은 레시피로 감싸지 않고 클래스 문자열 상수로 둬요.
+- 여러 부분으로 구성된 컴포넌트는 slot별로 나누고(`calloutRootRecipe`, `calloutIconClassName`) 컴포넌트는 `Object.assign`으로 묶어요.
 - 트리거로 쓰는 컴포넌트는 `asChild`를 지원해요. Radix `Slot`을 써요.
 - 포커스, dismiss, position 동작이 필요하면 직접 만들지 않고 Radix primitive를 먼저 확인해요.
 - DOM props와 `ref`, 접근 가능한 이름, `focus-visible` 상태를 보존해요.

@@ -1,6 +1,7 @@
-import { cva, type VariantProps } from "class-variance-authority";
+import { variants, type VariantProps } from "../variants";
 
-export const cardRecipe = cva("rounded-surface border text-fg-neutral", {
+export const cardRecipe = variants({
+  base: "rounded-surface border text-fg-neutral",
   variants: {
     layer: {
       default: "border-stroke-neutral-subtle bg-bg-layer-default",
@@ -11,7 +12,7 @@ export const cardRecipe = cva("rounded-surface border text-fg-neutral", {
       false: "",
     },
   },
-  defaultVariants: { layer: "default", selected: false },
+  defaults: { layer: "default", selected: false },
 });
 
 export type CardRecipeProps = VariantProps<typeof cardRecipe>;

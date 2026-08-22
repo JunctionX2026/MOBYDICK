@@ -38,7 +38,7 @@
 - `manner-temp`, `banner-*`처럼 당근마켓 제품 전용 토큰을 가져오지 않아요.
 - Panda CSS, Qvism, Vanilla Extract 같은 Seed의 스타일 엔진을 가져오지 않아요. 저장소 스택은 Tailwind CSS v4예요.
 - `--seed-` 네임스페이스를 쓰지 않아요. `--moby-`를 써요. 남의 시스템 토큰처럼 보이면 안 돼요.
-- 컴포넌트 구현 코드를 복사하지 않아요. 구조만 참고하고 구현은 shadcn 방식(저장소가 소유하는 소스, `cva`, Radix primitive)으로 작성해요.
+- 컴포넌트 구현 코드를 복사하지 않아요. 구조만 참고하고 구현은 shadcn 방식(저장소가 소유하는 소스, 자체 `variants` 헬퍼, Radix primitive)으로 작성해요.
 - `dimension-x1`처럼 숫자에 `x` 접두를 붙이는 표기를 쓰지 않아요. Tailwind v4의 `--spacing` 스케일을 그대로 써요.
 
 ### Provenance

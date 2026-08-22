@@ -1,7 +1,8 @@
-import { cva, type VariantProps } from "class-variance-authority";
+import { variants, type VariantProps } from "../variants";
 import type { Tone } from "./shared";
 
-export const calloutRootRecipe = cva("flex w-full gap-2.5 rounded-surface border p-3.5 text-sm", {
+export const calloutRootRecipe = variants({
+  base: "flex w-full gap-2.5 rounded-surface border p-3.5 text-sm",
   variants: {
     tone: {
       neutral: [
@@ -30,16 +31,16 @@ export const calloutRootRecipe = cva("flex w-full gap-2.5 rounded-surface border
       ],
     } satisfies Record<Tone, string[]>,
   },
-  defaultVariants: { tone: "neutral" },
+  defaults: { tone: "neutral" },
 });
 
-export const calloutIconRecipe = cva("mt-0.5 inline-flex size-4 shrink-0 [&>svg]:size-full");
+export const calloutIconClassName = "mt-0.5 inline-flex size-4 shrink-0 [&>svg]:size-full";
 
-export const calloutContentRecipe = cva("flex min-w-0 flex-col gap-1");
+export const calloutContentClassName = "flex min-w-0 flex-col gap-1";
 
-export const calloutTitleRecipe = cva("font-semibold");
+export const calloutTitleClassName = "font-semibold";
 
-export const calloutDescriptionRecipe = cva("text-fg-neutral-muted");
+export const calloutDescriptionClassName = "text-fg-neutral-muted";
 
 export type CalloutRecipeProps = VariantProps<typeof calloutRootRecipe>;
 export type CalloutTone = NonNullable<CalloutRecipeProps["tone"]>;
