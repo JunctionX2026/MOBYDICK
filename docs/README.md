@@ -10,6 +10,7 @@
 | 도메인 용어와 식별자 규칙 | [`specs/product/glossary.md`](../specs/product/glossary.md)    |
 | 단계 사이 데이터 형식     | `specs/features/010-*`, `specs/features/011-*`                 |
 | 외부 사례를 채택한 이유   | [`research/README.md`](../research/README.md)                  |
+| 색상 토큰과 컴포넌트 규칙 | [`packages/design-system/AGENTS.md`](../packages/design-system/AGENTS.md) |
 | 테스트 계층과 판단 기준   | [`QUALITY.md`](QUALITY.md)                                     |
 | 실제 검증 명령            | 루트와 각 워크스페이스의 `package.json`                        |
 

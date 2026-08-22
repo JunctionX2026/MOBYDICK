@@ -1,0 +1,97 @@
+@theme inline {
+  --color-palette-gray-00: var(--moby-color-palette-gray-00);
+  --color-palette-gray-100: var(--moby-color-palette-gray-100);
+  --color-palette-gray-200: var(--moby-color-palette-gray-200);
+  --color-palette-gray-300: var(--moby-color-palette-gray-300);
+  --color-palette-gray-400: var(--moby-color-palette-gray-400);
+  --color-palette-gray-500: var(--moby-color-palette-gray-500);
+  --color-palette-gray-600: var(--moby-color-palette-gray-600);
+  --color-palette-gray-700: var(--moby-color-palette-gray-700);
+  --color-palette-gray-800: var(--moby-color-palette-gray-800);
+  --color-palette-gray-900: var(--moby-color-palette-gray-900);
+  --color-palette-gray-1000: var(--moby-color-palette-gray-1000);
+
+  --color-bg-layer-default: var(--moby-color-bg-layer-default);
+  --color-bg-layer-basement: var(--moby-color-bg-layer-basement);
+  --color-bg-layer-floating: var(--moby-color-bg-layer-floating);
+
+  --color-bg-neutral-solid: var(--moby-color-bg-neutral-solid);
+  --color-bg-neutral-solid-pressed: var(--moby-color-bg-neutral-solid-pressed);
+  --color-bg-neutral-weak: var(--moby-color-bg-neutral-weak);
+  --color-bg-neutral-weak-pressed: var(--moby-color-bg-neutral-weak-pressed);
+  --color-bg-neutral-inverted: var(--moby-color-bg-neutral-inverted);
+  --color-bg-neutral-inverted-pressed: var(--moby-color-bg-neutral-inverted-pressed);
+
+  --color-bg-brand-solid: var(--moby-color-bg-brand-solid);
+  --color-bg-brand-solid-pressed: var(--moby-color-bg-brand-solid-pressed);
+  --color-bg-brand-weak: var(--moby-color-bg-brand-weak);
+  --color-bg-brand-weak-pressed: var(--moby-color-bg-brand-weak-pressed);
+
+  --color-bg-critical-solid: var(--moby-color-bg-critical-solid);
+  --color-bg-critical-solid-pressed: var(--moby-color-bg-critical-solid-pressed);
+  --color-bg-critical-weak: var(--moby-color-bg-critical-weak);
+  --color-bg-critical-weak-pressed: var(--moby-color-bg-critical-weak-pressed);
+
+  --color-bg-warning-solid: var(--moby-color-bg-warning-solid);
+  --color-bg-warning-solid-pressed: var(--moby-color-bg-warning-solid-pressed);
+  --color-bg-warning-weak: var(--moby-color-bg-warning-weak);
+  --color-bg-warning-weak-pressed: var(--moby-color-bg-warning-weak-pressed);
+
+  --color-bg-positive-solid: var(--moby-color-bg-positive-solid);
+  --color-bg-positive-solid-pressed: var(--moby-color-bg-positive-solid-pressed);
+  --color-bg-positive-weak: var(--moby-color-bg-positive-weak);
+  --color-bg-positive-weak-pressed: var(--moby-color-bg-positive-weak-pressed);
+
+  --color-bg-informative-solid: var(--moby-color-bg-informative-solid);
+  --color-bg-informative-solid-pressed: var(--moby-color-bg-informative-solid-pressed);
+  --color-bg-informative-weak: var(--moby-color-bg-informative-weak);
+  --color-bg-informative-weak-pressed: var(--moby-color-bg-informative-weak-pressed);
+
+  --color-bg-disabled: var(--moby-color-bg-disabled);
+  --color-bg-transparent-pressed: var(--moby-color-bg-transparent-pressed);
+  --color-bg-overlay: var(--moby-color-bg-overlay);
+
+  --color-fg-neutral: var(--moby-color-fg-neutral);
+  --color-fg-neutral-muted: var(--moby-color-fg-neutral-muted);
+  --color-fg-neutral-subtle: var(--moby-color-fg-neutral-subtle);
+  --color-fg-neutral-inverted: var(--moby-color-fg-neutral-inverted);
+
+  --color-fg-brand: var(--moby-color-fg-brand);
+  --color-fg-brand-contrast: var(--moby-color-fg-brand-contrast);
+  --color-fg-critical: var(--moby-color-fg-critical);
+  --color-fg-critical-contrast: var(--moby-color-fg-critical-contrast);
+  --color-fg-warning: var(--moby-color-fg-warning);
+  --color-fg-warning-contrast: var(--moby-color-fg-warning-contrast);
+  --color-fg-positive: var(--moby-color-fg-positive);
+  --color-fg-positive-contrast: var(--moby-color-fg-positive-contrast);
+  --color-fg-informative: var(--moby-color-fg-informative);
+  --color-fg-informative-contrast: var(--moby-color-fg-informative-contrast);
+
+  --color-fg-disabled: var(--moby-color-fg-disabled);
+  --color-fg-placeholder: var(--moby-color-fg-placeholder);
+
+  --color-stroke-neutral-solid: var(--moby-color-stroke-neutral-solid);
+  --color-stroke-neutral-muted: var(--moby-color-stroke-neutral-muted);
+  --color-stroke-neutral-subtle: var(--moby-color-stroke-neutral-subtle);
+
+  --color-stroke-brand-solid: var(--moby-color-stroke-brand-solid);
+  --color-stroke-brand-weak: var(--moby-color-stroke-brand-weak);
+  --color-stroke-critical-solid: var(--moby-color-stroke-critical-solid);
+  --color-stroke-critical-weak: var(--moby-color-stroke-critical-weak);
+  --color-stroke-warning-weak: var(--moby-color-stroke-warning-weak);
+  --color-stroke-positive-weak: var(--moby-color-stroke-positive-weak);
+  --color-stroke-informative-weak: var(--moby-color-stroke-informative-weak);
+
+  --color-stroke-focus-ring: var(--moby-color-stroke-focus-ring);
+
+  --radius-control-small: var(--moby-radius-control-small);
+  --radius-control: var(--moby-radius-control);
+  --radius-surface: var(--moby-radius-surface);
+  --radius-pill: var(--moby-radius-pill);
+
+  --ease-standard: var(--moby-easing-standard);
+
+  --shadow-elevation-raised: var(--moby-elevation-raised);
+  --shadow-elevation-floating: var(--moby-elevation-floating);
+  --shadow-elevation-overlay: var(--moby-elevation-overlay);
+}
