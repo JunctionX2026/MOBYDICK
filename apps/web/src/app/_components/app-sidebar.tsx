@@ -4,23 +4,14 @@ import { Button, SideNavigation, cn } from "@mobydick/design-system";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useBooleanState } from "react-simplikit";
-import {
-  CollapseIcon,
-  ComposeIcon,
-  DiscoverIcon,
-  OverviewIcon,
-  PlusIcon,
-  ServeIcon,
-} from "./icons";
+import { CollapseIcon, OverviewIcon, PlusIcon, ProjectsIcon } from "./icons";
 
 const NAVIGATION = [
-  { group: "개요", items: [{ href: "/", label: "홈", Icon: OverviewIcon }] },
   {
-    group: "파이프",
+    group: "작업",
     items: [
-      { href: "/discover", label: "발견", Icon: DiscoverIcon },
-      { href: "/compose", label: "조립", Icon: ComposeIcon },
-      { href: "/serve", label: "배포", Icon: ServeIcon },
+      { href: "/", label: "홈", Icon: OverviewIcon },
+      { href: "/projects", label: "프로젝트", Icon: ProjectsIcon },
     ],
   },
 ] as const;
@@ -43,7 +34,7 @@ export function AppSidebar() {
 
       <SideNavigation.Content>
         <Button asChild className="w-full" iconOnly={collapsed}>
-          <Link aria-label="프로젝트 생성" href="/discover">
+          <Link aria-label="프로젝트 생성" href="/projects/new">
             <PlusIcon className="size-4 shrink-0" />
             {!collapsed && "프로젝트 생성"}
           </Link>
@@ -55,7 +46,7 @@ export function AppSidebar() {
             {items.map(({ href, label, Icon }) => (
               <SideNavigation.Item
                 asChild
-                current={pathname === href}
+                current={href === "/" ? pathname === href : pathname.startsWith(href)}
                 icon={<Icon />}
                 key={href}
                 title={label}

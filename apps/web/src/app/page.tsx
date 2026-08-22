@@ -16,7 +16,7 @@ export default function HomePage() {
         </p>
         <div className="flex gap-2 pt-2">
           <Button asChild>
-            <Link href="/discover">시작하기</Link>
+            <Link href="/projects/new">프로젝트 만들기</Link>
           </Button>
           <Button asChild variant="outline">
             <a

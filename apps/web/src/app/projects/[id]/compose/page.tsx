@@ -1,6 +1,6 @@
-import { StagePlaceholder } from "../_components/stage-placeholder";
+import { StagePlaceholder } from "../../../_components/stage-placeholder";
 
-export default function ComposePage() {
+export default function ProjectComposePage() {
   return (
     <StagePlaceholder
       handoff="워크플로"

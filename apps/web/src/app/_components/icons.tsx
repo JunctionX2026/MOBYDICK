@@ -29,32 +29,10 @@ export function OverviewIcon(props: IconProps) {
   );
 }
 
-export function DiscoverIcon(props: IconProps) {
+export function ProjectsIcon(props: IconProps) {
   return (
     <Icon {...props}>
-      <circle cx="11" cy="11" r="7" />
-      <path d="m20 20-3.6-3.6" />
-    </Icon>
-  );
-}
-
-export function ComposeIcon(props: IconProps) {
-  return (
-    <Icon {...props}>
-      <circle cx="6" cy="6" r="2.5" />
-      <circle cx="18" cy="12" r="2.5" />
-      <circle cx="6" cy="18" r="2.5" />
-      <path d="M8.2 7.2 15.8 11M15.8 13 8.2 16.8" />
-    </Icon>
-  );
-}
-
-export function ServeIcon(props: IconProps) {
-  return (
-    <Icon {...props}>
-      <rect height="6" rx="2" width="18" x="3" y="4" />
-      <rect height="6" rx="2" width="18" x="3" y="14" />
-      <path d="M7 7h.01M7 17h.01" />
+      <path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h4l2 2.5h7A1.5 1.5 0 0 1 19 10v7a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 3 17z" />
     </Icon>
   );
 }

@@ -1,6 +1,6 @@
-import { StagePlaceholder } from "../_components/stage-placeholder";
+import { StagePlaceholder } from "../../../_components/stage-placeholder";
 
-export default function ServePage() {
+export default function ProjectServePage() {
   return (
     <StagePlaceholder
       handoff="API · MCP"

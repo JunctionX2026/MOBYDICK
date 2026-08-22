@@ -9,6 +9,8 @@ Next.js App Router로 만드는 배포 단위예요. 조립과 표현만 담당�
 - 공용 UI는 `@mobydick/design-system`을 먼저 확인해요. 같은 역할의 컴포넌트를 앱에서 다시 만들지 않아요.
 - 도메인 타입과 순수 로직은 `packages`에 둬요. 앱에 접합부 타입을 다시 정의하지 않아요.
 - 다른 앱을 직접 import하지 않아요.
+- 로컬 저장소 접근은 `src/lib`에 모으고 라우트에서 직접 `localStorage`를 만지지 않아요. 읽은 값은 `@mobydick/domain`의 `parse*`로 검증해요.
+- 목록은 첫 클라이언트 읽기 전까지 `null`로 두고 스켈레톤을 보여줘요. 빈 배열로 시작하면 사용자가 "없음"으로 오해해요.
 
 ## 스타일
 
@@ -30,7 +32,7 @@ Cloudflare Workers에 `@opennextjs/cloudflare`로 올려요. 워커 이름은 `m
 - `pnpm --filter @mobydick/web preview`로 workerd에서 먼저 확인하고 `deploy`로 올려요. `next build`만으로는 워커 번들이 안 나와요.
 - `export const runtime = "edge"`를 쓰지 않아요. 이 어댑터가 지원하지 않아요.
 - `wrangler.jsonc`의 `main`과 `assets`는 빌드 산출 경로라서 바꾸지 않아요.
-- 지금 앱은 전부 정적이라 증분 캐시(R2)와 self-reference 바인딩을 두지 않았어요. ISR이나 `revalidate`를 쓰기 시작하면 그때 추가해요.
+- 지금 앱에 서버 상태가 없어서 증분 캐시(R2)와 self-reference 바인딩을 두지 않았어요. ISR이나 `revalidate`를 쓰기 시작하면 그때 추가해요.
 
 ## 검증
 

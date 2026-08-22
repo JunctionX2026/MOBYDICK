@@ -9,17 +9,14 @@ export interface StagePlaceholderProps {
 
 export function StagePlaceholder({ handoff, stage, summary, title }: StagePlaceholderProps) {
   return (
-    <main className="mx-auto flex max-w-5xl flex-col gap-8 px-6 py-12">
-      <header className="flex flex-col gap-3">
+    <section aria-label={stage} className="flex flex-col gap-4">
+      <div className="flex flex-col gap-2">
         <div className="flex items-center gap-2">
-          <Badge emphasis="weak" tone="brand">
-            {stage}
-          </Badge>
+          <h2 className="text-fg-neutral text-lg font-semibold">{title}</h2>
           <Badge size="small">다음 단계로 {handoff}</Badge>
         </div>
-        <h1 className="text-fg-neutral text-2xl font-bold tracking-tight">{title}</h1>
         <p className="text-fg-neutral-muted max-w-2xl text-sm">{summary}</p>
-      </header>
+      </div>
 
       <Card>
         <Card.Header>
@@ -36,6 +33,6 @@ export function StagePlaceholder({ handoff, stage, summary, title }: StagePlaceh
           </div>
         </Card.Body>
       </Card>
-    </main>
+    </section>
   );
 }

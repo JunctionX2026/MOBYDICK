@@ -32,6 +32,7 @@ brief  →  spec  →  구현  →  스펙 상태 갱신
 | [`features/001-graph-knowledge-base.md`](features/001-graph-knowledge-base.md)            | ① 그래프 지식 베이스              | `draft` |
 | [`features/002-workflow-canvas.md`](features/002-workflow-canvas.md)                      | ② 워크플로 캔버스                 | `draft` |
 | [`features/003-serve-api-mcp.md`](features/003-serve-api-mcp.md)                          | ③ API / MCP 배포                  | `draft` |
+| [`features/004-project.md`](features/004-project.md)                                      | 파이프를 담는 프로젝트 단위        | `agreed` |
 
 접합부 스펙을 기능 스펙보다 먼저 확정해요. 접합부가 비어 있으면 세 기능이 따로 놀아요.
 
