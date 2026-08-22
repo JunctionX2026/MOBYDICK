@@ -1,23 +1,16 @@
 import { Icon } from "../icon";
 import type { IconProps } from "../types";
 
+/** Generated from the Tabler outline icon "focus-2". Run `pnpm generate` to update. */
 export const FocusIcon = (props: IconProps) => (
   <Icon {...props}>
-    <svg
-      aria-hidden="true"
-      fill="none"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="2"
-      viewBox="0 0 24 24"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path d="M4 8v-2a2 2 0 0 1 2 -2h2" />
-      <path d="M4 16v2a2 2 0 0 0 2 2h2" />
-      <path d="M16 4h2a2 2 0 0 1 2 2v2" />
-      <path d="M16 20h2a2 2 0 0 0 2 -2v-2" />
-      <path d="M12 9a3 3 0 1 0 0 6a3 3 0 0 0 0 -6" />
+    <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M11.5 12a.5 .5 0 1 0 1 0a.5 .5 0 1 0 -1 0" fill="currentColor" />
+      <path d="M5 12a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" />
+      <path d="M12 3l0 2" />
+      <path d="M3 12l2 0" />
+      <path d="M12 19l0 2" />
+      <path d="M19 12l2 0" />
     </svg>
   </Icon>
 );

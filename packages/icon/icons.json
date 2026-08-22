@@ -1,0 +1,19 @@
+{
+  "affiliate": { "name": "Affiliate", "variants": ["outline", "filled"] },
+  "alert-triangle": { "name": "AlertTriangle", "variants": ["outline"] },
+  "arrow-right": { "name": "ArrowRight", "variants": ["outline"] },
+  "chevron-left": { "name": "ChevronLeft", "variants": ["outline"] },
+  "database": { "name": "Database", "variants": ["outline", "filled"] },
+  "external-link": { "name": "ExternalLink", "variants": ["outline"] },
+  "focus-2": { "name": "Focus", "variants": ["outline"] },
+  "layout-sidebar": { "name": "PanelLeft", "variants": ["filled"] },
+  "pencil": { "name": "Pencil", "variants": ["outline"] },
+  "player-play": { "name": "Play", "variants": ["filled"] },
+  "send": { "name": "Send", "variants": ["outline", "filled"] },
+  "sitemap": { "name": "Sitemap", "variants": ["filled"] },
+  "sparkles": { "name": "Sparkles", "variants": ["filled"] },
+  "transform": { "name": "Transform", "variants": ["outline", "filled"] },
+  "trash": { "name": "Trash", "variants": ["outline"] },
+  "zoom-in": { "name": "ZoomIn", "variants": ["outline"] },
+  "zoom-out": { "name": "ZoomOut", "variants": ["outline"] }
+}

@@ -1,7 +1,7 @@
 "use client";
 
 import { Badge, Button, Callout, Card, Skeleton, Textarea } from "@mobydick/design-system";
-import { ArrowRightIcon, SparkleFilledIcon, TrashIcon } from "@mobydick/icon";
+import { ArrowRightIcon, SparklesFilledIcon, TrashIcon } from "@mobydick/icon";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -114,7 +114,7 @@ function ProjectCreateForm() {
       <div className="flex items-center justify-between gap-3">
         <p className="text-fg-neutral-subtle text-xs">질문 하나가 프로젝트 하나예요.</p>
         <Button disabled={trimmed === "" || creating} size="large" type="submit">
-          <SparkleFilledIcon />
+          <SparklesFilledIcon />
           {creating ? "만드는 중" : "작업실 열기"}
         </Button>
       </div>
