@@ -20,6 +20,10 @@
 - 추천과 실행 응답은 웹 앱 경계에서 검증하고, 실패하면 빈 결과 대신 정지 신호를 보여줘요.
 - 로컬에서는 Next 앱과 FastAPI를 각각 실행하고, 외부 데모가 필요하면 Next 앱만 ngrok으로 공개해요. 해커톤 동안 외부 요청도 FastAPI의 Codex planner까지 통과할 수 있어요.
 - 프로젝트 설명을 입력하면 FastAPI planner가 후보 데이터 소스, 선언적 파이프라인, DuckDB 결과를 한 번에 만들어요.
+- Codex planner가 계약에 맞지 않는 계획을 반환하면 FastAPI가 이를 웹에 전달하지 않고 검증된 결정적 fallback 계획으로 교체해요.
+- Next.js의 GovData 프록시는 내부 camelCase 타입을 외부 snake_case wire 계약으로 다시 직렬화한 뒤 브라우저에 반환해요.
+- 캔버스의 소스·조인·변환·출력 노드는 우클릭 메뉴와 상단 실행 버튼으로 실행할 수 있어요. 선택한 노드까지의 선행 소스를 하나의 REST 실행 요청으로 처리하고, 해당 단계의 행·컬럼·매칭 상세를 보여줘요.
+- 실행 요청의 선언적 payload와 검증된 response는 화면에서 확인할 수 있어요. 실시간 공공데이터 호출은 인증키를 제외한 payload·response snapshot을 로컬 cache에 저장하고, 네트워크 실패 시 명시적으로 허용된 replay 모드에서만 재사용해요.
 - 배포는 API와 MCP 두 가지 주소를 제공하고, 선택적 출력 스키마가 있으면 JSON 객체 목록을 반환해요.
 
 ### 안 하는 것
@@ -42,8 +46,8 @@
 | `GET /api/govdata/stats` | `GET /api/stats` | 연결 상태와 적재 수치 |
 | `GET /api/govdata/live/catalog` | `GET /api/live/catalog` | 실시간 공공데이터 서비스·오퍼레이션 목록 |
 | `POST /api/govdata/live` | `POST /api/live/execute` | payload → 공공데이터 응답·레코드 |
-| `POST /api/deployments/:id` | `POST /api/plan` | 배포된 질문 → API 결과 |
-| `GET/POST /api/mcp/:id` | Next.js → FastAPI planner | MCP manifest·JSON-RPC `query_project` |
+| `POST /api/deployments/:id` | `POST /api/run` | 저장된 OperationSpec → API 결과 |
+| `GET/POST /api/mcp/:id` | `POST /api/run` | MCP manifest·JSON-RPC `query_project` |
 
 `GOVDATA_SOURCE_URL`은 FastAPI 서버의 origin이에요. 로컬 기본값은 `http://127.0.0.1:8000`이고, 배포 환경에서는 외부 접근 가능한 데이터 소스 origin을 명시해요.
 
@@ -75,6 +79,8 @@
 
 Codex planner는 FastAPI 프로세스에서만 `codex exec --ephemeral --json --sandbox read-only`로 실행하고, Codex CLI가 관리하는 ChatGPT OAuth 세션을 사용해요. Vercel AI SDK나 OpenAI API 키를 사용하지 않고, OAuth 토큰도 웹 앱·브라우저·배포 응답에 전달하지 않아요. 해커톤 기간에는 외부 요청도 planner를 사용할 수 있어요. 기능이 꺼져 있거나 Codex 호출이 실패하면 번들의 결정적 추천 스펙으로 폴백해요. AI가 만든 스펙도 `OperationSpec` 컴파일과 DuckDB 실행 검증을 통과해야 해요.
 
+planner 응답은 `OperationSpec` 파서가 허용하는 식별자, 연산자, 필수 필드를 사용해야 해요. Codex 응답이 JSON schema, OperationSpec 계약 또는 실행 검증 중 하나라도 통과하지 못하면 FastAPI가 검색 결과에서 만든 fallback을 실행하고 `planner: "fallback"`과 `planner_error`를 반환해요. 이 경우에도 `pipeline`, `result`, `dropped_detail`을 포함한 동일한 응답 구조를 유지해요.
+
 `POST /api/plan`과 배포 API의 `schema`는 object schema예요. `properties`의 각 항목은 결과 컬럼 이름과 같거나 `{ "column": "결과컬럼" }` 또는 `{ "from": "결과컬럼" }`으로 매핑해요. 실행 결과에는 원본 표 형식과 함께 `output` JSON 목록이 포함돼요.
 
 ## 실패와 정지 조건
@@ -98,6 +104,9 @@ Codex planner는 FastAPI 프로세스에서만 `codex exec --ephemeral --json --
 - [ ] 데모 SQL 10개가 번들 DuckDB에서 행을 반환해요.
 - [ ] 외부 데모에서는 Next 앱 하나만 ngrok으로 공개하고, FastAPI 포트는 직접 공개하지 않아요.
 - [ ] Codex OAuth planner가 FastAPI에서 질문을 OperationSpec으로 만들고 DuckDB 결과와 파이프라인을 반환해요.
+- [ ] Codex가 잘못된 식별자나 필드를 반환해도 웹에는 파이프라인 계약 오류가 노출되지 않고 fallback 계획이 표시돼요.
+- [ ] 노드 우클릭 실행과 상단 실행이 비활성화되지 않고, 소스는 단일 실행, 조인·변환·출력은 선행 소스 전체 실행 결과를 보여줘요.
+- [ ] 실시간 API의 저장 snapshot에 serviceKey가 없고, replay가 명시적으로 켜지지 않으면 live 실패를 stale 데이터로 바꾸지 않아요.
 - [ ] 출력 스키마를 주면 API와 MCP가 JSON 객체 목록을 반환해요.
 - [ ] 실시간 공공데이터 catalog와 실행 응답이 웹·FastAPI 경계에서 검증돼요.
 - [ ] 실시간 실행 payload에는 인증키를 넣을 수 없고 FastAPI가 allowlist endpoint만 호출해요.

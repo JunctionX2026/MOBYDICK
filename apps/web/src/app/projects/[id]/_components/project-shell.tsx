@@ -1,11 +1,11 @@
 "use client";
 
 import { Badge, Button, Callout, SideNavigation, Skeleton, Spinner } from "@mobydick/design-system";
-import { AlertTriangleIcon, HelpCircleIcon, PlayFilledIcon, SendFilledIcon } from "@mobydick/icon";
+import { AlertTriangleIcon, PlayFilledIcon, SendFilledIcon } from "@mobydick/icon";
 import Link from "next/link";
 import { graphql, useLazyLoadQuery } from "react-relay";
 import { useEffect, useRef, useState } from "react";
-import { parseGovDataPlan, type GovDataPlan } from "@mobydick/domain";
+import { parseGovDataOperationSpec, parseGovDataPlan, type GovDataPlan } from "@mobydick/domain";
 import type { projectShellQuery } from "@/__generated__/relay/projectShellQuery.graphql";
 import { ClientQuery } from "@/relay/client-query";
 import { Playground } from "./playground";
@@ -37,6 +37,9 @@ const ProjectQuery = graphql`
           source
           target
         }
+        operationSpecJson
+        requestDataJson
+        payloadSchemaJson
       }
     }
   }
@@ -72,10 +75,41 @@ function phaseBadge(phase: string) {
   return { label: "발견", tone: "informative" as const };
 }
 
+function parseJsonObject(value: string | null | undefined) {
+  if (value == null || value.trim() === "") {
+    return null;
+  }
+
+  try {
+    const parsed: unknown = JSON.parse(value);
+    return isJsonObject(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function isJsonObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function parseStoredOperationSpec(value: string | null | undefined) {
+  if (value == null || value.trim() === "") {
+    return null;
+  }
+
+  try {
+    const parsed: unknown = JSON.parse(value);
+    return parseGovDataOperationSpec(parsed);
+  } catch {
+    return null;
+  }
+}
+
 function ProjectToolbar({ description, name, phase, projectId }: { description: string; name: string; phase: string; projectId: string }) {
-  const [descriptionOpen, setDescriptionOpen] = useState(false);
   const [deploymentOpen, setDeploymentOpen] = useState(false);
+  const { executeLastNode, execution, nodes } = useWorkflow();
   const badge = phaseBadge(phase);
+  const executionDisabled = nodes.length === 0 || execution.status === "running";
 
   return (
     <header className="border-stroke-neutral-subtle bg-bg-layer-floating shadow-elevation-floating relative z-20 mx-4 mt-4 flex min-h-14 shrink-0 items-center justify-between gap-4 rounded-surface border px-4 py-2.5">
@@ -88,37 +122,17 @@ function ProjectToolbar({ description, name, phase, projectId }: { description: 
           ·
         </span>
         <p className="text-fg-neutral-muted min-w-0 truncate text-sm">{description}</p>
-        <Button
-          aria-controls="project-description-tooltip"
-          aria-expanded={descriptionOpen}
-          aria-label="프로젝트 설명 보기"
-          className="text-fg-neutral-subtle hover:text-fg-neutral"
-          iconOnly
-          onClick={() => setDescriptionOpen((open) => !open)}
-          size="small"
-          variant="ghost"
-        >
-          <HelpCircleIcon />
-        </Button>
-        {descriptionOpen && (
-          <div
-            className="border-stroke-neutral-subtle bg-bg-layer-modal text-fg-neutral shadow-elevation-floating absolute top-full left-0 z-30 mt-2 max-w-[min(28rem,calc(100vw-2rem))] rounded-surface border p-3 text-sm"
-            id="project-description-tooltip"
-            role="tooltip"
-          >
-            {description}
-          </div>
-        )}
       </div>
       <div className="flex shrink-0 items-center gap-2">
         <Button
           className="h-7 gap-0.5 px-2 text-xs [&_svg]:size-3.5"
-          disabled
+          disabled={executionDisabled}
+          onClick={() => void executeLastNode()}
           size="small"
-          title="실행은 아직 준비 중이에요"
+          title={executionDisabled ? "실행할 노드가 없어요" : "마지막 노드까지 실행"}
           variant="outline"
         >
-          <PlayFilledIcon />
+          {execution.status === "running" ? <Spinner aria-hidden label="" size="small" variant="current" /> : <PlayFilledIcon />}
           실행
         </Button>
         <Button
@@ -139,6 +153,43 @@ function ProjectToolbar({ description, name, phase, projectId }: { description: 
       />
     </header>
   );
+}
+
+function UnsavedChangesGuard() {
+  const { dirty, saving } = useWorkflow();
+
+  useEffect(() => {
+    if (!dirty || saving) {
+      return;
+    }
+
+    const message = "저장하지 않은 변경 사항이 있어요. 페이지를 나갈까요?";
+    const beforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = message;
+    };
+    const restoreEntry = () => window.history.pushState({ mobydickUnsaved: true }, "", window.location.href);
+    const onPopState = () => {
+      if (window.confirm(message)) {
+        window.removeEventListener("popstate", onPopState);
+        window.history.back();
+        return;
+      }
+
+      restoreEntry();
+    };
+
+    window.addEventListener("beforeunload", beforeUnload);
+    window.addEventListener("popstate", onPopState);
+    restoreEntry();
+
+    return () => {
+      window.removeEventListener("beforeunload", beforeUnload);
+      window.removeEventListener("popstate", onPopState);
+    };
+  }, [dirty, saving]);
+
+  return null;
 }
 
 function ProjectToolbarSkeleton() {
@@ -201,6 +252,7 @@ function ProjectPlanner({ question, hasNodes }: { question: string; hasNodes: bo
             title: node.title,
           })),
           parsed.pipeline.links.map<CanvasLink>((link) => ({ ...link })),
+          parsed,
         );
         setStatus("ready");
       })
@@ -251,9 +303,21 @@ function ProjectWorkspace({ projectId }: { projectId: string }) {
 
   const { name, phase, question, workflow } = data.project;
   const { droppedCount, nodes } = toCanvasNodes(workflow.nodes);
+  const initialOperationSpec = parseStoredOperationSpec(workflow.operationSpecJson);
+  const initialRequestData = parseJsonObject(workflow.requestDataJson) ?? {};
+  const initialPayloadSchema = parseJsonObject(workflow.payloadSchemaJson);
 
   return (
-    <WorkflowProvider initialLinks={workflow.links} initialNodes={nodes} projectId={projectId}>
+    <WorkflowProvider
+      initialLinks={workflow.links}
+      initialNodes={nodes}
+      initialOperationSpec={initialOperationSpec}
+      initialPayloadSchema={initialPayloadSchema}
+      initialRequestData={initialRequestData}
+      projectId={projectId}
+      question={question}
+    >
+      <UnsavedChangesGuard />
       <div className="bg-bg-layer-basement flex h-dvh overflow-hidden">
         <ProjectNavigation name={name} projectId={projectId} question={question} />
         <SideNavigation.Inset className="bg-bg-layer-basement">

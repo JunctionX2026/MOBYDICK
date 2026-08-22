@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<035787c384935d42b275860c37323ef5>>
+ * @generated SignedSource<<1e8bbd7d3cd71813bc633ff781107c72>>
  * @lightSyntaxTransform
  */
 
@@ -8,16 +8,14 @@
 // @ts-nocheck
 
 import { ConcreteRequest } from 'relay-runtime';
-export type ProjectPhase = "COMPOSE" | "DISCOVER" | "SERVE" | "%future added value";
 export type WorkflowNodeKind = "JOIN" | "OUTPUT" | "SOURCE" | "TRANSFORM" | "%future added value";
-export type projectShellQuery$variables = {
+export type projectSettingsPageQuery$variables = {
   id: string;
 };
-export type projectShellQuery$data = {
+export type projectSettingsPageQuery$data = {
   readonly project: {
     readonly id: string;
     readonly name: string;
-    readonly phase: ProjectPhase;
     readonly question: string;
     readonly workflow: {
       readonly links: ReadonlyArray<{
@@ -42,9 +40,9 @@ export type projectShellQuery$data = {
     };
   } | null | undefined;
 };
-export type projectShellQuery = {
-  response: projectShellQuery$data;
-  variables: projectShellQuery$variables;
+export type projectSettingsPageQuery = {
+  response: projectSettingsPageQuery$data;
+  variables: projectSettingsPageQuery$variables;
 };
 
 const node: ConcreteRequest = (function(){
@@ -90,13 +88,6 @@ v2 = [
         "args": null,
         "kind": "ScalarField",
         "name": "question",
-        "storageKey": null
-      },
-      {
-        "alias": null,
-        "args": null,
-        "kind": "ScalarField",
-        "name": "phase",
         "storageKey": null
       },
       {
@@ -231,7 +222,7 @@ return {
     "argumentDefinitions": (v0/*:: as any*/),
     "kind": "Fragment",
     "metadata": null,
-    "name": "projectShellQuery",
+    "name": "projectSettingsPageQuery",
     "selections": (v2/*:: as any*/),
     "type": "Query",
     "abstractKey": null
@@ -240,20 +231,20 @@ return {
   "operation": {
     "argumentDefinitions": (v0/*:: as any*/),
     "kind": "Operation",
-    "name": "projectShellQuery",
+    "name": "projectSettingsPageQuery",
     "selections": (v2/*:: as any*/)
   },
   "params": {
-    "cacheID": "e997d9becea7505269ef10ae3165a2d7",
+    "cacheID": "1baf651955bc490e7818d24ac1c3684a",
     "id": null,
     "metadata": {},
-    "name": "projectShellQuery",
+    "name": "projectSettingsPageQuery",
     "operationKind": "query",
-    "text": "query projectShellQuery(\n  $id: ID!\n) {\n  project(id: $id) {\n    id\n    name\n    question\n    phase\n    workflow {\n      nodes {\n        id\n        kind\n        title\n        subtitle\n        datasetId\n        position {\n          x\n          y\n        }\n      }\n      links {\n        id\n        source\n        target\n      }\n      operationSpecJson\n      requestDataJson\n      payloadSchemaJson\n    }\n  }\n}\n"
+    "text": "query projectSettingsPageQuery(\n  $id: ID!\n) {\n  project(id: $id) {\n    id\n    name\n    question\n    workflow {\n      nodes {\n        id\n        kind\n        title\n        subtitle\n        datasetId\n        position {\n          x\n          y\n        }\n      }\n      links {\n        id\n        source\n        target\n      }\n      operationSpecJson\n      requestDataJson\n      payloadSchemaJson\n    }\n  }\n}\n"
   }
 };
 })();
 
-(node as any).hash = "b7f2d8df64cba0f0bc58f3b3de3c4240";
+(node as any).hash = "ed8e671a9e836f5acc01e1367045ae6b";
 
 export default node;

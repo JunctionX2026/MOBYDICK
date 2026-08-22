@@ -76,22 +76,25 @@ function ProjectList() {
       )}
 
       {projects.length === 0 ? (
-        <Card className="border-dashed">
-          <Card.Header>
+        <Card className="border-stroke-neutral-muted bg-bg-layer-floating min-h-72 border-dashed shadow-none">
+          <Card.Header className="flex min-h-64 flex-col items-center justify-center px-6 text-center">
+            <span className="bg-bg-brand-weak text-fg-brand rounded-pill mb-4 flex size-11 items-center justify-center">
+              <SparklesFilledIcon size={20} />
+            </span>
             <Card.Title>아직 프로젝트가 없어요</Card.Title>
             <Card.Description>
-              새 프로젝트를 눌러 첫 작업실을 만들어보세요.
+              위의 새 프로젝트를 눌러 첫 작업실을 만들어보세요.
             </Card.Description>
           </Card.Header>
         </Card>
       ) : (
-        <ul className="overflow-hidden rounded-surface border border-stroke-neutral-subtle bg-bg-layer-default">
+        <ul className="border-stroke-neutral-muted bg-bg-layer-floating overflow-hidden rounded-surface border shadow-elevation-raised">
           {projects.map((project) => {
             const phase = phaseLabel(project.phase);
 
             return (
-              <li className="border-b border-stroke-neutral-subtle last:border-b-0" key={project.id}>
-                <div className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+              <li className="border-stroke-neutral-subtle last:border-b-0 border-b transition-colors duration-[var(--moby-duration-fast)] hover:bg-bg-transparent-pressed" key={project.id}>
+                <div className="flex min-h-28 flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <h2 className="truncate text-base font-semibold text-fg-neutral-default">{project.name}</h2>
@@ -166,10 +169,10 @@ function ProjectListSkeleton() {
     <ul
       aria-busy="true"
       aria-label="프로젝트를 불러오는 중"
-      className="overflow-hidden rounded-surface border border-stroke-neutral-subtle bg-bg-layer-default"
+      className="border-stroke-neutral-muted bg-bg-layer-floating overflow-hidden rounded-surface border shadow-elevation-raised"
     >
       {[0, 1, 2].map((key) => (
-        <li className="border-b border-stroke-neutral-subtle last:border-b-0" key={key}>
+        <li className="border-stroke-neutral-subtle last:border-b-0 border-b" key={key}>
           <ProjectRowSkeleton />
         </li>
       ))}
@@ -182,10 +185,18 @@ export function ProjectPicker() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex justify-end">
+      <header className="border-stroke-neutral-muted bg-bg-layer-floating shadow-elevation-floating flex flex-col gap-4 rounded-surface border p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+        <div className="min-w-0">
+          <p className="text-fg-neutral-muted text-xs font-semibold tracking-wide">MOBYDICK WORKSPACE</p>
+          <h1 className="text-fg-neutral mt-1 text-2xl font-semibold tracking-tight">프로젝트</h1>
+          <p className="text-fg-neutral-subtle mt-1 text-sm">
+            공공데이터를 찾아 연결하고, 바로 사용할 수 있는 API와 MCP로 내보내요.
+          </p>
+        </div>
         <Button
           aria-controls="new-project-dialog"
           aria-haspopup="dialog"
+          className="shrink-0 self-start sm:self-auto"
           onClick={() => setDialogOpen(true)}
           size="medium"
           type="button"
@@ -193,7 +204,7 @@ export function ProjectPicker() {
           <SparklesFilledIcon />
           새 프로젝트
         </Button>
-      </div>
+      </header>
 
       <NewProjectDialog onOpenChange={setDialogOpen} open={dialogOpen} />
 

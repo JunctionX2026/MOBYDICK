@@ -2,7 +2,8 @@
 
 import { Badge, Button, Callout, Input, Skeleton } from "@mobydick/design-system";
 import { ArrowRightIcon, DatabaseFilledIcon } from "@mobydick/icon";
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
+import { dialogTransitionClassName, useDialogTransition } from "@/app/_components/dialog-transition";
 
 interface RecommendedDataset {
   datasetId: string;
@@ -108,27 +109,11 @@ function confidenceBadge(confidence: RecommendedDataset["confidence"]) {
 }
 
 export function DataSourceDialog({ onOpenChange, onSelect, open, question }: DataSourceDialogProps) {
-  const dialogRef = useRef<HTMLDialogElement>(null);
+  const dialogRef = useDialogTransition(open);
   const [query, setQuery] = useState(question);
   const [datasets, setDatasets] = useState<RecommendedDataset[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const dialog = dialogRef.current;
-
-    if (dialog == null) {
-      return;
-    }
-
-    if (open && !dialog.open) {
-      dialog.showModal();
-    }
-
-    if (!open && dialog.open) {
-      dialog.close();
-    }
-  }, [open]);
 
   useEffect(() => {
     if (!open) {
@@ -221,7 +206,7 @@ export function DataSourceDialog({ onOpenChange, onSelect, open, question }: Dat
     <dialog
       aria-describedby="data-source-dialog-description"
       aria-labelledby="data-source-dialog-title"
-      className="m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-2xl overflow-y-auto rounded-surface border border-stroke-neutral-subtle bg-bg-layer-modal p-0 text-fg-neutral shadow-elevation-overlay backdrop:bg-bg-overlay"
+      className={`${dialogTransitionClassName} m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-2xl overflow-y-auto rounded-surface border border-stroke-neutral-subtle bg-bg-layer-modal p-0 text-fg-neutral shadow-elevation-overlay backdrop:bg-bg-overlay`}
       id="data-source-dialog"
       onClick={(event) => {
         if (event.target === event.currentTarget) {
@@ -229,6 +214,10 @@ export function DataSourceDialog({ onOpenChange, onSelect, open, question }: Dat
         }
       }}
       onClose={() => onOpenChange(false)}
+      onCancel={(event) => {
+        event.preventDefault();
+        onOpenChange(false);
+      }}
       ref={dialogRef}
     >
       <div className="flex flex-col gap-5 p-5">

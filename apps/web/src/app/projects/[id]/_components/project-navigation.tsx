@@ -1,11 +1,11 @@
 "use client";
 
-import { Button, Input, SideNavigation, Skeleton, Spinner } from "@mobydick/design-system";
+import { Button, SideNavigation, Skeleton } from "@mobydick/design-system";
 import {
   AffiliateFilledIcon,
-  ChevronLeftIcon,
   DatabaseFilledIcon,
   DeviceFloppyFilledIcon,
+  MobydickMarkIcon,
   PanelLeftFilledIcon,
   PencilIcon,
   SendFilledIcon,
@@ -13,23 +13,12 @@ import {
   TransformFilledIcon,
 } from "@mobydick/icon";
 import Link from "next/link";
-import { useEffect, useState, type FormEvent } from "react";
-import { graphql, useMutation } from "react-relay";
+import type { Route } from "next";
+import { useState } from "react";
 import { match } from "ts-pattern";
-import type { projectNavigationRenameMutation } from "@/__generated__/relay/projectNavigationRenameMutation.graphql";
-import { ConnectDialog, NodeDialog, WorkflowDialog, type NodeDialogOption } from "./workflow-dialog";
+import { ConnectDialog, NodeDialog, type NodeDialogOption } from "./workflow-dialog";
 import { DataSourceDialog, type RecommendedDataset } from "./data-source-dialog";
 import { useWorkflow } from "./workflow-store";
-
-const RenameProject = graphql`
-  mutation projectNavigationRenameMutation($input: RenameProjectInput!) {
-    renameProject(input: $input) {
-      id
-      name
-      updatedAt
-    }
-  }
-`;
 
 const NODE_OPTIONS: readonly NodeDialogOption[] = [
   { kind: "SOURCE", label: "데이터 소스", icon: <DatabaseFilledIcon size={20} /> },
@@ -39,7 +28,7 @@ const NODE_OPTIONS: readonly NodeDialogOption[] = [
 ];
 
 const sideNavigationCardClassName =
-  "m-4 h-[calc(100%-2rem)] rounded-surface border border-stroke-neutral-subtle shadow-elevation-raised";
+  "m-4 h-[calc(100%-2rem)] rounded-surface border border-stroke-neutral-muted shadow-elevation-raised";
 
 export interface ProjectNavigationProps {
   name: string;
@@ -47,93 +36,11 @@ export interface ProjectNavigationProps {
   question: string;
 }
 
-interface ProjectSettingsDialogProps {
-  name: string;
-  onOpenChange: (open: boolean) => void;
-  open: boolean;
-  projectId: string;
-}
-
-function ProjectSettingsDialog({ name, onOpenChange, open, projectId }: ProjectSettingsDialogProps) {
-  const [draft, setDraft] = useState(name);
-  const [error, setError] = useState<string | null>(null);
-  const [commit, renaming] = useMutation<projectNavigationRenameMutation>(RenameProject);
-
-  useEffect(() => {
-    if (open) {
-      setDraft(name);
-      setError(null);
-    }
-  }, [name, open]);
-
-  const submit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const trimmed = draft.trim();
-
-    if (trimmed === "") {
-      setError("프로젝트 이름을 입력하세요.");
-      return;
-    }
-
-    if (trimmed === name) {
-      onOpenChange(false);
-      return;
-    }
-
-    setError(null);
-    commit({
-      variables: { input: { id: projectId, name: trimmed } },
-      onCompleted: (_response, errors) => {
-        if (errors != null && errors.length > 0) {
-          setError(errors[0]?.message ?? "프로젝트 이름을 바꾸지 못했어요.");
-          return;
-        }
-
-        onOpenChange(false);
-      },
-      onError: (reason) => setError(reason.message),
-    });
-  };
-
-  return (
-    <WorkflowDialog
-      description="프로젝트 이름을 바꾸거나 실행 설정을 확인해요."
-      id="project-settings-dialog"
-      onOpenChange={onOpenChange}
-      open={open}
-      title="프로젝트 설정"
-    >
-      <form className="flex flex-col gap-5" onSubmit={submit}>
-        <label className="flex flex-col gap-1.5">
-          <span className="text-fg-neutral text-sm font-medium">프로젝트 이름</span>
-          <Input
-            autoFocus
-            disabled={renaming}
-            onChange={(event) => setDraft(event.target.value)}
-            value={draft}
-          />
-        </label>
-        {error != null && <p className="text-fg-critical text-sm">{error}</p>}
-        <div className="flex justify-end gap-2">
-          <Button onClick={() => onOpenChange(false)} size="small" variant="ghost">
-            취소
-          </Button>
-          <Button disabled={renaming} size="small" type="submit">
-            {renaming && <Spinner aria-hidden label="" size="small" variant="current" />}
-            저장
-          </Button>
-        </div>
-      </form>
-    </WorkflowDialog>
-  );
-}
-
-export function ProjectNavigation({ name, projectId, question }: ProjectNavigationProps) {
+export function ProjectNavigation({ projectId, question }: ProjectNavigationProps) {
   const { addNode, connect, dirty, nodes, rejectionFor, save, saving } = useWorkflow();
   const [nodeDialogOpen, setNodeDialogOpen] = useState(false);
   const [connectDialogOpen, setConnectDialogOpen] = useState(false);
   const [dataSourceDialogOpen, setDataSourceDialogOpen] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const handleAddNode = (kind: typeof NODE_OPTIONS[number]["kind"]) => {
     if (kind === "SOURCE") {
@@ -149,10 +56,17 @@ export function ProjectNavigation({ name, projectId, question }: ProjectNavigati
       <SideNavigation.Root aria-label="프로젝트 메뉴" className={sideNavigationCardClassName}>
         <SideNavigation.Header className="pr-12">
           <Link
-            className="text-fg-neutral-subtle hover:text-fg-neutral flex items-center gap-1 text-xs font-medium"
+            aria-label="모든 프로젝트"
+            className="text-fg-neutral-subtle hover:text-fg-neutral flex items-center gap-2 text-xs font-medium"
             href="/"
+            onClick={(event) => {
+              if (dirty && !saving && !window.confirm("저장하지 않은 변경 사항이 있어요. 페이지를 나갈까요?")) {
+                event.preventDefault();
+              }
+            }}
+            title="모든 프로젝트"
           >
-            <ChevronLeftIcon size={14} />
+            <MobydickMarkIcon size={20} />
             <span className="group-data-[side-navigation-state=collapsed]/side-navigation:opacity-0 truncate transition-opacity">
               모든 프로젝트
             </span>
@@ -192,9 +106,18 @@ export function ProjectNavigation({ name, projectId, question }: ProjectNavigati
         </SideNavigation.Content>
 
         <SideNavigation.Footer>
-          <SideNavigation.Item onClick={() => setSettingsOpen(true)} title="프로젝트 설정">
-            <SideNavigation.ItemPrefixIcon svg={<PencilIcon size={20} />} />
-            <SideNavigation.ItemLabel>프로젝트 설정</SideNavigation.ItemLabel>
+          <SideNavigation.Item asChild title="프로젝트 설정">
+            <Link
+              href={`/projects/${projectId}/settings` as Route}
+              onClick={(event) => {
+                if (dirty && !saving && !window.confirm("저장하지 않은 변경 사항이 있어요. 페이지를 나갈까요?")) {
+                  event.preventDefault();
+                }
+              }}
+            >
+              <SideNavigation.ItemPrefixIcon svg={<PencilIcon size={20} />} />
+              <SideNavigation.ItemLabel>프로젝트 설정</SideNavigation.ItemLabel>
+            </Link>
           </SideNavigation.Item>
           <SideNavigation.Item
             disabled={!dirty || saving}
@@ -243,12 +166,6 @@ export function ProjectNavigation({ name, projectId, question }: ProjectNavigati
         onOpenChange={setConnectDialogOpen}
         open={connectDialogOpen}
         rejectionFor={rejectionFor}
-      />
-      <ProjectSettingsDialog
-        name={name}
-        onOpenChange={setSettingsOpen}
-        open={settingsOpen}
-        projectId={projectId}
       />
     </>
   );

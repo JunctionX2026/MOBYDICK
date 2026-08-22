@@ -1,4 +1,8 @@
-import { parseWorkflow, type Workflow } from "@mobydick/domain";
+import {
+  parseWorkflow,
+  serializeGovDataOperationSpec,
+  type Workflow,
+} from "@mobydick/domain";
 import { buildSchema, type GraphQLSchema } from "graphql";
 import { typeDefs } from "../__generated__/type-defs";
 import {
@@ -41,6 +45,18 @@ interface WorkflowLinkInput {
   target: string;
 }
 
+function parseJsonField(value: string | null | undefined, label: string) {
+  if (value == null || value.trim() === "") {
+    return undefined;
+  }
+
+  try {
+    return JSON.parse(value) as unknown;
+  } catch {
+    throw new StorageError(`The ${label} field is not valid JSON.`);
+  }
+}
+
 /**
  * Enum names travel in SCREAMING_CASE while the domain keeps them lowercase.
  * The mapping lives here so nothing else has to know both spellings.
@@ -48,6 +64,9 @@ interface WorkflowLinkInput {
 function toDomainWorkflow(input: {
   nodes: WorkflowNodeInput[];
   links: WorkflowLinkInput[];
+  operationSpecJson?: string | null;
+  requestDataJson?: string | null;
+  payloadSchemaJson?: string | null;
 }): Workflow {
   const workflow = parseWorkflow({
     nodes: input.nodes.map((node) => ({
@@ -56,6 +75,15 @@ function toDomainWorkflow(input: {
       datasetId: node.datasetId,
     })),
     links: input.links,
+    ...(input.operationSpecJson == null
+      ? { operationSpec: null }
+      : { operationSpec: parseJsonField(input.operationSpecJson, "operationSpecJson") }),
+    ...(input.requestDataJson == null
+      ? {}
+      : { requestData: parseJsonField(input.requestDataJson, "requestDataJson") }),
+    ...(input.payloadSchemaJson == null
+      ? { payloadSchema: null }
+      : { payloadSchema: parseJsonField(input.payloadSchemaJson, "payloadSchemaJson") }),
   });
 
   if (workflow == null) {
@@ -78,6 +106,13 @@ function present(project: Project) {
         datasetId: node.datasetId,
       })),
       links: project.workflow.links,
+      operationSpecJson:
+        project.workflow.operationSpec == null
+          ? null
+          : JSON.stringify(serializeGovDataOperationSpec(project.workflow.operationSpec)),
+      requestDataJson: JSON.stringify(project.workflow.requestData ?? {}),
+      payloadSchemaJson:
+        project.workflow.payloadSchema == null ? null : JSON.stringify(project.workflow.payloadSchema),
     },
     deploymentId: project.deploymentId,
     createdAt: project.createdAt,
@@ -101,7 +136,14 @@ export const rootValue = {
   saveWorkflow: async ({
     input,
   }: {
-    input: { id: string; nodes: WorkflowNodeInput[]; links: WorkflowLinkInput[] };
+    input: {
+      id: string;
+      nodes: WorkflowNodeInput[];
+      links: WorkflowLinkInput[];
+      operationSpecJson?: string | null;
+      requestDataJson?: string | null;
+      payloadSchemaJson?: string | null;
+    };
   }) => present(await saveWorkflow(input.id, toDomainWorkflow(input))),
   deleteProject: async ({ id }: { id: string }) => ({
     deletedProjectId: await removeProject(id),

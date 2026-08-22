@@ -1,4 +1,5 @@
-import { GovDataSourceError, planGovData } from "@/server/govdata-source";
+import { GovDataSourceError } from "@/server/govdata-source";
+import { runStoredDeployment } from "@/server/deployment-runtime";
 import { errorResponse, isRecord } from "@/server/govdata-http";
 import { findProjectByDeploymentId } from "@/server/project-repository";
 
@@ -7,7 +8,7 @@ const tool = {
   inputSchema: {
     additionalProperties: false,
     properties: {
-      query: { type: "string" },
+      request: { type: "object" },
       schema: { type: "object" },
     },
     required: [],
@@ -65,12 +66,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
     const paramsValue = isRecord(body) && isRecord(body.params) ? body.params : null;
     const argumentsValue = paramsValue != null && isRecord(paramsValue.arguments) ? paramsValue.arguments : {};
-    const query = typeof argumentsValue.query === "string" && argumentsValue.query.trim() !== ""
-      ? argumentsValue.query.trim()
-      : project.question;
-    const schema = isRecord(argumentsValue.schema) ? argumentsValue.schema : undefined;
-    const plan = await planGovData(query, schema);
-    const payload = { deploymentId: id, query, ...plan };
+    const payload = await runStoredDeployment(project, id, argumentsValue);
 
     return jsonRpc(rpcId, {
       content: [{ text: JSON.stringify(payload), type: "text" }],

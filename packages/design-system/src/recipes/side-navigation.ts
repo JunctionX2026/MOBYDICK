@@ -12,13 +12,13 @@ const collapsed = "group-data-[side-navigation-state=collapsed]/side-navigation"
 
 export const sideNavigationRootClassName = [
   "group/side-navigation relative flex h-full shrink-0 flex-col overflow-x-hidden",
-  "border-r border-stroke-neutral-subtle bg-bg-layer-side-navigation text-fg-neutral",
+  "border-r border-stroke-neutral-muted bg-bg-layer-side-navigation text-fg-neutral",
   "transition-[width]",
   collapseTransition,
 ].join(" ");
 
 export const sideNavigationHeaderClassName =
-  "relative flex min-h-14 shrink-0 items-center gap-2 px-3 py-2";
+  "relative flex min-h-14 shrink-0 items-center gap-2 px-3 py-2 group-data-[side-navigation-state=collapsed]/side-navigation:justify-center";
 
 export const sideNavigationTriggerClassName = [
   "absolute top-2 right-2 inline-flex size-9 cursor-pointer items-center justify-center",
@@ -39,7 +39,7 @@ export const sideNavigationContentClassName = [
 ].join(" ");
 
 export const sideNavigationFooterClassName = [
-  "flex shrink-0 flex-col gap-0.5 border-t border-stroke-neutral-subtle p-2 empty:hidden",
+  "flex shrink-0 flex-col gap-0.5 border-t border-stroke-neutral-muted p-2 empty:hidden",
   `${collapsed}:px-2.5`,
   "transition-[padding]",
   collapseTransition,

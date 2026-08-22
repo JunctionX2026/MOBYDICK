@@ -85,6 +85,52 @@ function externalOperationSpec(spec: GovDataOperationSpec) {
   };
 }
 
+export function serializeGovDataRunResult(result: GovDataRunResult) {
+  return {
+    columns: result.columns,
+    rows: result.rows,
+    row_count: result.rowCount,
+    sources: result.sources.map((source) => ({
+      alias: source.alias,
+      dataset_id: source.datasetId,
+      title: source.title,
+    })),
+    dropped_detail: result.droppedDetail.map((detail) => ({
+      alias: detail.alias,
+      dataset_id: detail.datasetId,
+      title: detail.title,
+      keys: detail.keys,
+      matched: detail.matched,
+      match_rate: detail.matchRate,
+      dropped: detail.dropped,
+      dropped_keys: detail.droppedKeys,
+    })),
+    ...(result.output == null ? {} : { output: result.output }),
+  };
+}
+
+function externalPlan(plan: GovDataPlan) {
+  return {
+    planner: plan.planner,
+    ...(plan.plannerError == null ? {} : { planner_error: plan.plannerError }),
+    title: plan.title,
+    explanation: plan.explanation,
+    spec: externalOperationSpec(plan.spec),
+    result: serializeGovDataRunResult(plan.result),
+    pipeline: {
+      nodes: plan.pipeline.nodes.map((node) => ({
+        id: node.id,
+        kind: node.kind,
+        title: node.title,
+        subtitle: node.subtitle,
+        dataset_id: node.datasetId,
+        position: node.position,
+      })),
+      links: plan.pipeline.links,
+    },
+  };
+}
+
 export async function recommendGovData(query: string, k = 8): Promise<GovDataRecommendation> {
   const payload = await request("/api/recommend", {
     method: "POST",
@@ -134,6 +180,10 @@ export async function planGovData(
   }
 
   return plan;
+}
+
+export function serializeGovDataPlan(plan: GovDataPlan) {
+  return externalPlan(plan);
 }
 
 export async function getGovDataDataset(datasetId: string): Promise<GovDataDatasetWiki> {

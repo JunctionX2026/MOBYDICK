@@ -2,10 +2,13 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 import re
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
+from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any
 from urllib.parse import urlencode
 
@@ -16,6 +19,8 @@ SUCCESS_CODES = {"0", "00", "000", "200", "OK", "INFO-000", "INFO-00", "INFO-0"}
 SERVICE_KEY_NAMES = {"servicekey", "service_key"}
 OPERATION_PATTERN = re.compile(r"^[A-Za-z0-9_-]+$")
 USER_AGENT = "MOBYDICK-GovData/0.1"
+DATA = Path(__file__).resolve().parents[1] / "data"
+LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -279,7 +284,72 @@ def _request(service: LiveService, url: str, params: dict[str, Any]) -> requests
         raise LiveApiError(f"공공데이터 API에 연결하지 못했어요: {error}") from error
 
 
-def execute_live_api(service_name: str, operation: str | None, payload: dict[str, Any]) -> dict[str, Any]:
+def _live_cache_enabled() -> bool:
+    return os.environ.get("GOVDATA_LIVE_CACHE_ENABLED", "true").lower() == "true"
+
+
+def _live_replay_enabled() -> bool:
+    return os.environ.get("GOVDATA_LIVE_REPLAY", "false").lower() == "true"
+
+
+def _snapshot_path(service_name: str, operation: str | None) -> Path:
+    cache_dir = Path(os.environ.get("GOVDATA_LIVE_CACHE_DIR", str(DATA / "live_cache")))
+    safe_service = re.sub(r"[^A-Za-z0-9_-]", "_", service_name)
+    service = SERVICES.get(service_name)
+    normalized_operation = operation or (service.default_operation if service is not None else None) or "default"
+    safe_operation = re.sub(r"[^A-Za-z0-9_-]", "_", normalized_operation)
+    return cache_dir / f"{safe_service}_{safe_operation}.json"
+
+
+def _save_snapshot(result: dict[str, Any]) -> bool:
+    if not _live_cache_enabled():
+        return False
+
+    path = _snapshot_path(result["service"], result.get("operation"))
+    snapshot = {
+        "service": result["service"],
+        "operation": result.get("operation"),
+        "endpoint": result["endpoint"],
+        "payload": result["payload"],
+        "status_code": result["status_code"],
+        "content_type": result["content_type"],
+        "format": result["format"],
+        "response": result["response"],
+        "records": result["records"],
+        "record_count": result["record_count"],
+        "total_count": result["total_count"],
+        "saved_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        temporary = path.with_suffix(".tmp")
+        temporary.write_text(json.dumps(snapshot, ensure_ascii=False), encoding="utf-8")
+        temporary.replace(path)
+        return True
+    except (OSError, TypeError) as error:
+        LOGGER.warning("Unable to save live API snapshot: %s", error)
+        return False
+
+
+def _load_snapshot(service_name: str, operation: str | None) -> dict[str, Any] | None:
+    path = _snapshot_path(service_name, operation)
+
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+
+    if not isinstance(value, dict) or value.get("service") != service_name:
+        return None
+
+    return {key: value[key] for key in (
+        "service", "operation", "endpoint", "payload", "status_code", "content_type", "format",
+        "response", "records", "record_count", "total_count",
+    ) if key in value}
+
+
+def _execute_live_api(service_name: str, operation: str | None, payload: dict[str, Any]) -> dict[str, Any]:
     service = SERVICES.get(service_name)
     if service is None:
         raise LiveApiError("지원하지 않는 공공데이터 서비스예요.", 400)
@@ -334,4 +404,25 @@ def execute_live_api(service_name: str, operation: str | None, payload: dict[str
         "records": records,
         "record_count": len(records),
         "total_count": _find_total(parsed),
+    }
+
+
+def execute_live_api(service_name: str, operation: str | None, payload: dict[str, Any]) -> dict[str, Any]:
+    try:
+        result = _execute_live_api(service_name, operation, payload)
+    except LiveApiError as error:
+        if error.status not in {502, 503, 504} or not _live_replay_enabled():
+            raise
+
+        snapshot = _load_snapshot(service_name, operation)
+        if snapshot is None:
+            raise
+
+        return {**snapshot, "source": "snapshot", "replayed_error": str(error)}
+
+    saved = _save_snapshot(result)
+    return {
+        **result,
+        "source": "live",
+        "snapshot": {"key": _snapshot_path(service_name, operation).stem, "saved": saved},
     }

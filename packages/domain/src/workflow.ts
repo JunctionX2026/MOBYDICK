@@ -1,3 +1,5 @@
+import { parseGovDataOperationSpec, type GovDataOperationSpec } from "./govdata";
+
 export type WorkflowNodeKind = "source" | "transform" | "join" | "output";
 
 const NODE_KINDS: readonly WorkflowNodeKind[] = ["source", "transform", "join", "output"];
@@ -25,6 +27,9 @@ export interface WorkflowLink {
 export interface Workflow {
   nodes: WorkflowNode[];
   links: WorkflowLink[];
+  operationSpec?: GovDataOperationSpec | null;
+  requestData?: Record<string, unknown>;
+  payloadSchema?: Record<string, unknown> | null;
 }
 
 export const EMPTY_WORKFLOW: Workflow = { nodes: [], links: [] };
@@ -39,6 +44,10 @@ function isNonEmptyString(value: unknown): value is string {
 
 function isFiniteNumber(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value);
+}
+
+function parseJsonObject(value: unknown): Record<string, unknown> | null {
+  return isRecord(value) ? value : null;
 }
 
 function isNodeKind(value: unknown): value is WorkflowNodeKind {
@@ -142,7 +151,26 @@ export function parseWorkflow(value: unknown): Workflow | null {
     links.push(link);
   }
 
-  return { nodes, links };
+  const operationSpec =
+    value.operationSpec == null ? null : parseGovDataOperationSpec(value.operationSpec);
+  const requestData = value.requestData == null ? null : parseJsonObject(value.requestData);
+  const payloadSchema = value.payloadSchema == null ? null : parseJsonObject(value.payloadSchema);
+
+  if (
+    (value.operationSpec != null && operationSpec == null) ||
+    (value.requestData != null && requestData == null) ||
+    (value.payloadSchema != null && payloadSchema == null)
+  ) {
+    return null;
+  }
+
+  return {
+    nodes,
+    links,
+    ...(value.operationSpec !== undefined ? { operationSpec } : {}),
+    ...(requestData == null ? {} : { requestData }),
+    ...(value.payloadSchema !== undefined ? { payloadSchema } : {}),
+  };
 }
 
 /**

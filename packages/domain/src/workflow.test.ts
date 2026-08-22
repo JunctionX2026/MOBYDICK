@@ -1,5 +1,19 @@
 import { describe, expect, it } from "vitest";
-import { linkRejection, type WorkflowLink } from "./workflow";
+import { parseWorkflow, linkRejection, type WorkflowLink } from "./workflow";
+
+const storedSpec = {
+  sources: [
+    {
+      alias: "a",
+      dataset_id: "dataset_1",
+      filters: [],
+      metrics: [{ name: "total", agg: "count", column: "*" }],
+      group_by: [],
+    },
+  ],
+  order_by: [],
+  limit: 100,
+};
 
 const link = (source: string, target: string): WorkflowLink => ({
   id: `${source}-${target}`,
@@ -34,5 +48,49 @@ describe("linkRejection", () => {
 
   it("terminates when the existing links already contain a loop", () => {
     expect(linkRejection([link("a", "b"), link("b", "a")], "b", "c")).toBeNull();
+  });
+});
+
+describe("parseWorkflow", () => {
+  it("keeps stored execution settings at the workflow boundary", () => {
+    expect(
+      parseWorkflow({
+        nodes: [],
+        links: [],
+        operationSpec: storedSpec,
+        requestData: { region: "포항시" },
+        payloadSchema: {
+          type: "object",
+          properties: { total: { column: "total" } },
+        },
+      }),
+    ).toEqual({
+      nodes: [],
+      links: [],
+      operationSpec: {
+        sources: [
+          {
+            alias: "a",
+            datasetId: "dataset_1",
+            filters: [],
+            metrics: [{ name: "total", aggregation: "count", column: "*" }],
+            groupBy: [],
+          },
+        ],
+        orderBy: [],
+        limit: 100,
+      },
+      requestData: { region: "포항시" },
+      payloadSchema: {
+        type: "object",
+        properties: { total: { column: "total" } },
+      },
+    });
+  });
+
+  it("rejects malformed deployment settings", () => {
+    expect(parseWorkflow({ nodes: [], links: [], operationSpec: { sources: [] } })).toBeNull();
+    expect(parseWorkflow({ nodes: [], links: [], requestData: [] })).toBeNull();
+    expect(parseWorkflow({ nodes: [], links: [], payloadSchema: "object" })).toBeNull();
   });
 });

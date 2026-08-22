@@ -111,6 +111,10 @@ KO_SYN = {
     "노인정": "경로당", "경로당": "노인 복지", "어린이집": "보육시설", "유치원": "보육 교육", "관광지": "관광", "숙소": "숙박",
     "인구": "인구 주민등록 생활인구", "유동인구": "유동 인구", "주차": "주차장", "화장실": "공중화장실", "시장": "전통시장",
     "공장": "제조 공장 공업", "폐기물": "폐기물 배출", "태양광": "태양광발전", "축제": "축제 행사", "cctv": "CCTV 방범",
+    "폭염": "폭염 더위 기상 노령 인구 무더위쉼터 대피 장소",
+    "더위": "폭염 기상 노령 인구 무더위쉼터 대피 장소",
+    "취약": "취약 노령 인구 기상 무더위쉼터 대피 장소",
+    "갈 곳": "무더위쉼터 대피 장소 경로당",
 }
 _REGION_RE = re.compile("(" + "|".join(_kg.GB_SGG) + "|" + "|".join(s[:-1] for s in _kg.GB_SGG) + "|"
                         + "|".join(k for k, v in EN_KO.items() if v.endswith(("시", "군"))) + ")", re.I)
@@ -616,9 +620,16 @@ def single_spec(cat: Catalog, did: str, prefer: str | None = None, region: str |
 
 PLAN_SYSTEM = """You are the planner for GovData Studio. You never compute, fabricate, or return data rows.
 You only produce an OperationSpec JSON that the local DuckDB compiler executes. Use ONLY dataset_ids and
-column names given in the context. Keys use level \"sgg\" for city/county (시군구), \"emd\" for town
-(읍면동), and \"raw\" for exact-value keys. Metrics use count|sum|avg|min|max|count_distinct|count_if.
-Filters use =, !=, >, <, >=, <=, like, or in. Keep the limit at 100 or less. Return only JSON."""
+column names given in the context. Include every distinct concept needed to answer the question when the
+verified joinable sets contain it. Do not collapse a multi-concept policy question into one convenient
+dataset. For heat-risk or vulnerability questions, prefer an 읍면동 (emd) plan and include population,
+weather or temperature, and shelter or evacuation resources when those verified candidates exist.
+Keys use level \"sgg\" for city/county (시군구), \"emd\" for town (읍면동), and \"raw\" for exact-value keys.
+Metrics use count|sum|avg|min|max|count_distinct|count_if. Filters use =, !=, >, <, >=, <=, like, or in.
+Every identifier must contain only letters, numbers, Korean characters, or underscores. Do not use null
+filter values. Keep the limit at 100 or less. Return only JSON."""
+
+IDENTIFIER_SCHEMA = {"type": "string", "minLength": 1, "pattern": r"^[0-9A-Za-z가-힣_]+$"}
 
 PLAN_OUTPUT_SCHEMA = {
     "type": "object",
@@ -639,8 +650,8 @@ PLAN_OUTPUT_SCHEMA = {
                         "additionalProperties": False,
                         "required": ["alias", "dataset_id", "key", "filters", "metrics", "columns", "group_by"],
                         "properties": {
-                            "alias": {"type": "string", "minLength": 1},
-                            "dataset_id": {"type": "string", "minLength": 1},
+                            "alias": IDENTIFIER_SCHEMA,
+                            "dataset_id": IDENTIFIER_SCHEMA,
                             "key": {
                                 "anyOf": [
                                     {
@@ -648,7 +659,7 @@ PLAN_OUTPUT_SCHEMA = {
                                         "additionalProperties": False,
                                         "required": ["column", "level"],
                                         "properties": {
-                                            "column": {"type": "string", "minLength": 1},
+                                            "column": IDENTIFIER_SCHEMA,
                                             "level": {"type": "string", "enum": ["sgg", "emd", "raw"]},
                                         },
                                     },
@@ -662,14 +673,13 @@ PLAN_OUTPUT_SCHEMA = {
                                     "additionalProperties": False,
                                     "required": ["column", "op", "value"],
                                     "properties": {
-                                        "column": {"type": "string"},
+                                        "column": IDENTIFIER_SCHEMA,
                                         "op": {"type": "string", "enum": ["=", "!=", ">", "<", ">=", "<=", "like", "in"]},
                                         "value": {
                                             "anyOf": [
                                                 {"type": "string"},
                                                 {"type": "number"},
                                                 {"type": "array", "items": {"type": "string"}},
-                                                {"type": "null"},
                                             ]
                                         },
                                     },
@@ -682,23 +692,23 @@ PLAN_OUTPUT_SCHEMA = {
                                     "additionalProperties": False,
                                     "required": ["name", "agg", "column", "value"],
                                     "properties": {
-                                        "name": {"type": "string"},
+                                        "name": IDENTIFIER_SCHEMA,
                                         "agg": {
                                             "type": "string",
                                             "enum": ["count", "sum", "avg", "min", "max", "count_distinct", "count_if"],
                                         },
-                                        "column": {"type": "string"},
+                                        "column": {"anyOf": [IDENTIFIER_SCHEMA, {"type": "string", "const": "*"}]},
                                         "value": {"anyOf": [{"type": "string"}, {"type": "null"}]},
                                     },
                                 },
                             },
                             "columns": {
                                 "anyOf": [
-                                    {"type": "array", "items": {"type": "string"}},
+                                    {"type": "array", "items": IDENTIFIER_SCHEMA},
                                     {"type": "null"},
                                 ]
                             },
-                            "group_by": {"type": "array", "items": {"type": "string"}},
+                            "group_by": {"type": "array", "items": IDENTIFIER_SCHEMA},
                         },
                     },
                 },
@@ -710,7 +720,7 @@ PLAN_OUTPUT_SCHEMA = {
                         "additionalProperties": False,
                         "required": ["name", "desc"],
                         "properties": {
-                            "name": {"type": "string"},
+                            "name": IDENTIFIER_SCHEMA,
                             "desc": {"type": "boolean"},
                         },
                     },
@@ -724,10 +734,116 @@ PLAN_OUTPUT_SCHEMA = {
 }
 
 
+IDENTIFIER_PATTERN = re.compile(r"^[0-9A-Za-z가-힣_]+$")
+FILTER_OPERATORS = {"=", "!=", ">", "<", ">=", "<=", "like", "in"}
+AGGREGATIONS = {"count", "sum", "avg", "min", "max", "count_distinct", "count_if"}
+
+
+def _is_identifier(value: Any) -> bool:
+    return isinstance(value, str) and bool(IDENTIFIER_PATTERN.fullmatch(value.strip()))
+
+
+def _operation_spec_contract_error(spec: Any) -> str | None:
+    if not isinstance(spec, dict):
+        return "spec must be an object"
+
+    sources = spec.get("sources")
+    if not isinstance(sources, list) or not sources or len(sources) > 4:
+        return "sources must contain between one and four items"
+
+    for index, source in enumerate(sources):
+        if not isinstance(source, dict):
+            return f"sources[{index}] must be an object"
+        if not _is_identifier(source.get("alias")):
+            return f"sources[{index}].alias is not an identifier"
+        if not _is_identifier(source.get("dataset_id")):
+            return f"sources[{index}].dataset_id is not an identifier"
+
+        key = source.get("key")
+        if key is not None and (
+            not isinstance(key, dict)
+            or not _is_identifier(key.get("column"))
+            or key.get("level") not in {"sgg", "emd", "raw"}
+        ):
+            return f"sources[{index}].key is invalid"
+
+        filters = source.get("filters", [])
+        if not isinstance(filters, list):
+            return f"sources[{index}].filters must be an array"
+        for filter_index, item in enumerate(filters):
+            if not isinstance(item, dict) or not _is_identifier(item.get("column")):
+                return f"sources[{index}].filters[{filter_index}].column is invalid"
+            if item.get("op") not in FILTER_OPERATORS:
+                return f"sources[{index}].filters[{filter_index}].op is invalid"
+            value = item.get("value")
+            valid_value = (
+                isinstance(value, str)
+                or (isinstance(value, (int, float)) and not isinstance(value, bool))
+                or (isinstance(value, list) and all(isinstance(entry, str) for entry in value))
+            )
+            if not valid_value:
+                return f"sources[{index}].filters[{filter_index}].value is invalid"
+
+        metrics = source.get("metrics", [])
+        if not isinstance(metrics, list):
+            return f"sources[{index}].metrics must be an array"
+        for metric_index, item in enumerate(metrics):
+            if not isinstance(item, dict):
+                return f"sources[{index}].metrics[{metric_index}] must be an object"
+            if not _is_identifier(item.get("name")) or item.get("agg") not in AGGREGATIONS:
+                return f"sources[{index}].metrics[{metric_index}] name or agg is invalid"
+            if item.get("column") != "*" and not _is_identifier(item.get("column")):
+                return f"sources[{index}].metrics[{metric_index}].column is invalid"
+            if item.get("value") is not None and (
+                not isinstance(item.get("value"), str) or not item["value"].strip()
+            ):
+                return f"sources[{index}].metrics[{metric_index}].value is invalid"
+
+        columns = source.get("columns")
+        if columns is not None and (not isinstance(columns, list) or not all(_is_identifier(column) for column in columns)):
+            return f"sources[{index}].columns is invalid"
+        group_by = source.get("group_by", [])
+        if not isinstance(group_by, list) or not all(_is_identifier(column) for column in group_by):
+            return f"sources[{index}].group_by is invalid"
+
+    if spec.get("join") not in {None, "inner", "left"}:
+        return "join is invalid"
+    order_by = spec.get("order_by", [])
+    if not isinstance(order_by, list):
+        return "order_by must be an array"
+    for index, order in enumerate(order_by):
+        if not isinstance(order, dict) or not _is_identifier(order.get("name")) or not isinstance(order.get("desc"), bool):
+            return f"order_by[{index}] is invalid"
+
+    limit = spec.get("limit", 100)
+    if not isinstance(limit, int) or isinstance(limit, bool) or limit < 1 or limit > 1000:
+        return "limit is invalid"
+    return None
+
+
+def _planner_contract_error(plan: Any) -> str | None:
+    if not isinstance(plan, dict):
+        return "planner response must be an object"
+    if not isinstance(plan.get("title"), str) or not plan["title"].strip():
+        return "title is missing"
+    if not isinstance(plan.get("explanation"), str) or not plan["explanation"].strip():
+        return "explanation is missing"
+    return _operation_spec_contract_error(plan.get("spec"))
+
+
 def _codex_enabled() -> bool:
     return os.environ.get("GOVDATA_AI_ENABLED", "false").lower() == "true" and os.environ.get(
         "GOVDATA_AI_PROVIDER", "codex"
     ).lower() == "codex"
+
+
+def _planner_intent_hints(query: str) -> list[str]:
+    hints = []
+    if re.search(r"폭염|더위|열|취약", query):
+        hints.append("폭염 취약도는 노령 인구, 읍면동별 기온, 무더위쉼터 또는 대피 장소를 함께 비교해요.")
+    if re.search(r"우선순위|취약한|위험한", query):
+        hints.append("우선순위 결과는 위험 요인과 보호 자원을 같은 지역 키로 집계해요.")
+    return hints
 
 
 def _planner_context(cat: Catalog, query: str, candidates: list[dict], sets: list[dict]) -> dict:
@@ -750,7 +866,12 @@ def _planner_context(cat: Catalog, query: str, candidates: list[dict], sets: lis
             }
         )
 
-    return {"question": query, "candidates": brief, "verified_joinable_sets": sets[:4]}
+    return {
+        "question": query,
+        "intent_hints": _planner_intent_hints(query),
+        "candidates": brief,
+        "verified_joinable_sets": sets[:4],
+    }
 
 
 def _codex_message(stdout: str) -> str:

@@ -1,11 +1,12 @@
 "use client";
 
-import { Badge, Button, Callout, cn } from "@mobydick/design-system";
+import { Badge, Button, Callout, cn, Spinner } from "@mobydick/design-system";
 import {
   AffiliateIcon,
   AlertTriangleIcon,
   DatabaseIcon,
   FocusIcon,
+  PlayFilledIcon,
   SendIcon,
   TransformIcon,
   TrashIcon,
@@ -28,6 +29,7 @@ import {
   useWorkflow,
   type CanvasNode,
   type CanvasNodeKind,
+  type CanvasLink,
   type CanvasPosition,
   type LinkRejection,
 } from "./workflow-store";
@@ -91,6 +93,36 @@ function inputPort(node: CanvasNode): CanvasPosition {
   return { x: node.position.x, y: node.position.y + NODE_HEIGHT / 2 };
 }
 
+function upstreamNodeIds(nodeId: string, links: readonly CanvasLink[]) {
+  const parents = new Map<string, string[]>();
+
+  for (const link of links) {
+    parents.set(link.target, [...(parents.get(link.target) ?? []), link.source]);
+  }
+
+  const result = new Set<string>([nodeId]);
+  const queue = [nodeId];
+
+  while (queue.length > 0) {
+    const current = queue.shift();
+
+    if (current == null) {
+      continue;
+    }
+
+    for (const parent of parents.get(current) ?? []) {
+      if (result.has(parent)) {
+        continue;
+      }
+
+      result.add(parent);
+      queue.push(parent);
+    }
+  }
+
+  return result;
+}
+
 function linkPath(from: CanvasPosition, to: CanvasPosition) {
   const distance = Math.max(48, Math.abs(to.x - from.x) / 2);
 
@@ -114,7 +146,19 @@ function isTypingTarget(target: EventTarget | null) {
 }
 
 export function Playground() {
-  const { addNode, connect, error, links, moveNodes, lastAddedId, nodes, rejectionFor, remove } =
+  const {
+    addNode,
+    connect,
+    error,
+    executeNode,
+    execution,
+    links,
+    moveNodes,
+    lastAddedId,
+    nodes,
+    rejectionFor,
+    remove,
+  } =
     useWorkflow();
   const surface = useRef<HTMLDivElement>(null);
   const [viewport, setViewport] = useState<Viewport>({ x: 96, y: 96, zoom: 1 });
@@ -441,11 +485,15 @@ export function Playground() {
 
   const draggedSource =
     interaction?.type === "link" ? nodes.find((node) => node.id === interaction.source) : undefined;
+  const executingNodeIds =
+    execution.status === "running" && execution.nodeId != null
+      ? upstreamNodeIds(execution.nodeId, links)
+      : new Set<string>();
 
   return (
     <div className="relative flex h-full min-h-0 flex-col">
       <div
-        className="bg-bg-layer-basement relative flex-1 touch-none overflow-hidden"
+        className="bg-bg-layer-basement relative flex-1 touch-none overscroll-contain overflow-hidden"
         onPointerDown={(event) => {
           if (event.button === 1 || panMode) {
             startPan(event);
@@ -476,6 +524,8 @@ export function Playground() {
         onPointerUp={finishInteraction}
         onPointerCancel={finishInteraction}
         onWheel={(wheel: WheelEvent<HTMLDivElement>) => {
+          wheel.preventDefault();
+
           if (wheel.ctrlKey || wheel.metaKey) {
             zoomAround(viewport.zoom * (wheel.deltaY > 0 ? 0.92 : 1.08), wheel);
             return;
@@ -517,15 +567,21 @@ export function Playground() {
 
               const path = linkPath(outputPort(from), inputPort(to));
               const isSelected = selection.links.has(link.id);
+              const isExecutionLink =
+                execution.status === "running" &&
+                executingNodeIds.has(link.source) &&
+                executingNodeIds.has(link.target);
 
               return (
                 <g key={link.id}>
                   <path
                     className={cn(
-                      "fill-none",
+                      "fill-none transition-[stroke,stroke-width] duration-[var(--moby-duration-fast)]",
                       isSelected ? "stroke-stroke-critical-solid" : "stroke-stroke-brand-solid",
+                      isExecutionLink && "animate-pulse motion-reduce:animate-none",
                     )}
                     d={path}
+                    strokeDasharray={isExecutionLink ? "6 6" : undefined}
                     strokeWidth={isSelected ? 3 : 2}
                   />
                   <path
@@ -581,12 +637,17 @@ export function Playground() {
             const { Icon, label, tone } = nodeAppearance(node.kind);
             const isSelected = selection.nodes.has(node.id);
             const isLinkTarget = interaction?.type === "link" && interaction.target === node.id;
+            const isExecuting = execution.status === "running" && execution.nodeId === node.id;
+            const isExecutionInput = execution.status === "running" && executingNodeIds.has(node.id);
 
             return (
               <div
                 className={cn(
-                  "border-stroke-neutral-subtle bg-bg-layer-default shadow-elevation-raised rounded-surface absolute border transition-shadow",
+                  "border-stroke-neutral-subtle bg-bg-layer-default shadow-elevation-raised rounded-surface absolute border transition-[border-color,box-shadow,opacity] duration-[var(--moby-duration-fast)]",
                   isSelected && "border-stroke-brand-solid shadow-elevation-floating",
+                  isExecutionInput && !isExecuting && "border-stroke-brand-weak opacity-80",
+                  isExecuting &&
+                    "border-stroke-brand-solid shadow-elevation-floating ring-2 ring-stroke-brand-weak animate-pulse motion-reduce:animate-none",
                   isLinkTarget &&
                     (interaction.rejection == null
                       ? "border-stroke-brand-solid"
@@ -619,6 +680,7 @@ export function Playground() {
                   top: node.position.y,
                   width: NODE_WIDTH,
                 }}
+                data-execution-state={isExecuting ? "running" : isExecutionInput ? "upstream" : "idle"}
               >
                 <div className="flex h-full flex-col justify-center gap-1 px-3">
                   <div className="flex items-center gap-2">
@@ -628,12 +690,13 @@ export function Playground() {
                     <span className="text-fg-neutral truncate text-sm font-semibold">
                       {node.title}
                     </span>
+                    {isExecuting && <Spinner aria-hidden label="" size="small" variant="secondary" />}
                     <Badge className="ml-auto" emphasis="weak" size="small" tone={tone}>
                       {label}
                     </Badge>
                   </div>
                   <p className="text-fg-neutral-subtle truncate text-xs">
-                    {node.subtitle ?? "데이터를 아직 고르지 않았어요"}
+                    {isExecuting ? "실행 중" : node.subtitle ?? "데이터를 아직 고르지 않았어요"}
                   </p>
                 </div>
 
@@ -694,6 +757,63 @@ export function Playground() {
           </div>
         )}
 
+        {execution.status !== "idle" && (
+          <div
+            aria-live="polite"
+            className="border-stroke-neutral-muted bg-bg-layer-floating/95 text-fg-neutral shadow-elevation-floating absolute bottom-20 left-1/2 z-20 w-[min(42rem,calc(100%-2rem))] -translate-x-1/2 rounded-[20px] border px-4 py-3 backdrop-blur-[30px]"
+            onPointerDown={(event) => event.stopPropagation()}
+          >
+            {execution.status === "running" && (
+              <div className="text-fg-neutral-muted flex items-center gap-2 text-sm">
+                <Spinner aria-hidden label="" size="small" variant="secondary" />
+                {execution.nodeTitle ?? "노드"}부터 선행 데이터를 실행하는 중이에요.
+              </div>
+            )}
+            {execution.status === "error" && (
+              <div className="text-fg-critical flex items-center gap-2 text-sm">
+                <AlertTriangleIcon size={16} />
+                {execution.error ?? "노드를 실행하지 못했어요."}
+              </div>
+            )}
+            {execution.status === "success" && execution.result != null && (
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-sm font-semibold">{execution.nodeTitle} 실행 결과</span>
+                  <span className="text-fg-neutral-muted text-xs tabular-nums">
+                    {execution.result.rowCount.toLocaleString("ko-KR")}행 · {execution.result.columns.length}컬럼
+                  </span>
+                </div>
+                <p className="text-fg-neutral-muted truncate text-xs">
+                  {execution.result.sources.map((source) => source.title).join(" · ")}
+                </p>
+                {execution.result.droppedDetail.some((detail) => detail.dropped > 0) && (
+                  <p className="text-fg-warning text-xs">
+                    조인 매칭 상세가 있어요. 결과에서 제외된 키를 확인하세요.
+                  </p>
+                )}
+                <details>
+                  <summary className="text-fg-neutral-muted cursor-pointer text-xs">REST payload · response 보기</summary>
+                  <pre className="bg-bg-layer-default text-fg-neutral-muted mt-2 max-h-44 overflow-auto rounded-control p-2 text-[11px] leading-5">
+                    {JSON.stringify(
+                      {
+                        payload: execution.request?.body,
+                        response: {
+                          columns: execution.result.columns,
+                          rows: execution.result.rows.slice(0, 5),
+                          row_count: execution.result.rowCount,
+                          dropped_detail: execution.result.droppedDetail,
+                        },
+                      },
+                      null,
+                      2,
+                    )}
+                  </pre>
+                </details>
+              </div>
+            )}
+          </div>
+        )}
+
         <div
           className="border-stroke-neutral-subtle bg-bg-layer-floating rounded-pill shadow-elevation-raised absolute bottom-4 left-4 flex items-center gap-1 border p-1"
           onPointerDown={(event) => event.stopPropagation()}
@@ -735,7 +855,7 @@ export function Playground() {
 
         {selection.nodes.size + selection.links.size > 0 && (
           <div
-            className="border-stroke-neutral-subtle bg-bg-layer-floating rounded-pill shadow-elevation-raised text-fg-neutral-muted absolute right-4 bottom-4 flex items-center gap-2 border py-1 pr-1 pl-3 text-xs"
+            className="border-stroke-neutral-muted bg-bg-layer-floating/95 shadow-elevation-floating text-fg-neutral absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-2 rounded-[20px] border py-2 pr-2 pl-4 text-xs backdrop-blur-[30px]"
             onPointerDown={(event) => event.stopPropagation()}
           >
             <span>
@@ -756,13 +876,27 @@ export function Playground() {
       {contextMenu != null && (
         <div
           aria-label={`노드 ${contextMenu.nodeId} 메뉴`}
-          className="border-stroke-neutral-subtle bg-bg-layer-floating rounded-surface shadow-elevation-floating fixed z-40 min-w-36 border p-1"
+          className="border-stroke-neutral-subtle bg-bg-layer-floating rounded-surface shadow-elevation-floating fixed z-40 min-w-36 border p-1 animate-[moby-pop-in_var(--moby-duration-fast)_ease-standard] motion-reduce:animate-none"
           data-context-menu-node={contextMenu.nodeId}
           onContextMenu={(event) => event.preventDefault()}
           onPointerDown={(event) => event.stopPropagation()}
           role="menu"
           style={{ left: contextMenu.x, top: contextMenu.y }}
         >
+          <Button
+            className="w-full justify-start"
+            disabled={execution.status === "running"}
+            onClick={() => {
+              const nodeId = contextMenu.nodeId;
+              setContextMenu(null);
+              void executeNode(nodeId);
+            }}
+            size="small"
+            variant="ghost"
+          >
+            {execution.status === "running" ? <Spinner aria-hidden label="" size="small" variant="current" /> : <PlayFilledIcon />}
+            실행
+          </Button>
           <Button
             className="w-full justify-start"
             onClick={() => {

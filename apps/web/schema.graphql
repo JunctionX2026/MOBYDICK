@@ -24,6 +24,9 @@ enum ProjectPhase {
 type Workflow {
   nodes: [WorkflowNode!]!
   links: [WorkflowLink!]!
+  operationSpecJson: String
+  requestDataJson: String!
+  payloadSchemaJson: String
 }
 
 type WorkflowNode {
@@ -101,6 +104,9 @@ input SaveWorkflowInput {
   id: ID!
   nodes: [WorkflowNodeInput!]!
   links: [WorkflowLinkInput!]!
+  operationSpecJson: String
+  requestDataJson: String
+  payloadSchemaJson: String
 }
 
 type DeleteProjectPayload {

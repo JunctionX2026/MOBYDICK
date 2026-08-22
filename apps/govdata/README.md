@@ -18,6 +18,8 @@ AI planner는 `GOVDATA_AI_ENABLED=true`, `GOVDATA_AI_PROVIDER=codex`일 때 로�
 
 `GET /api/live/catalog`에서 허용된 서비스와 기본 오퍼레이션을 확인하고, `POST /api/live/execute`에 서비스·오퍼레이션·payload를 보내면 실제 포털 응답과 레코드 목록을 받아요. 서비스 URL은 서버 allowlist에 있는 값만 사용할 수 있어 임의 URL 프록시로 동작하지 않아요.
 
+성공한 실시간 호출은 `data/live_cache/`에 인증키를 제외한 payload와 response snapshot으로 저장해요. `GOVDATA_LIVE_REPLAY=true`를 명시한 경우에만 네트워크·인증 오류에서 같은 서비스와 오퍼레이션의 snapshot을 재사용해요. 기본값은 stale 응답을 사용하지 않아요.
+
 ```bash
 curl -s http://127.0.0.1:8000/api/live/catalog
 curl -s -X POST http://127.0.0.1:8000/api/live/execute \

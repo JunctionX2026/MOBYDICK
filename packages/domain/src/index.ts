@@ -24,6 +24,7 @@ export {
   parseGovDataLiveCatalog,
   parseGovDataLiveResult,
   parseGovDataOperationSpec,
+  serializeGovDataOperationSpec,
   parseGovDataPlan,
   parseGovDataRecommendation,
   parseGovDataRunResult,

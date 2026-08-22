@@ -164,6 +164,7 @@ export interface GovDataPipeline {
 
 export interface GovDataPlan {
   planner: "codex" | "fallback";
+  plannerError?: string;
   title: string;
   explanation: string;
   spec: GovDataOperationSpec;
@@ -614,6 +615,32 @@ export function parseGovDataOperationSpec(value: unknown): GovDataOperationSpec 
   return { sources, ...(join == null ? {} : { join }), orderBy, limit };
 }
 
+export function serializeGovDataOperationSpec(spec: GovDataOperationSpec) {
+  return {
+    sources: spec.sources.map((source) => ({
+      alias: source.alias,
+      dataset_id: source.datasetId,
+      ...(source.key == null ? {} : { key: source.key }),
+      filters: source.filters.map((filter) => ({
+        column: filter.column,
+        op: filter.operator,
+        value: filter.value,
+      })),
+      metrics: source.metrics.map((metric) => ({
+        name: metric.name,
+        agg: metric.aggregation,
+        column: metric.column,
+        ...(metric.value == null ? {} : { value: metric.value }),
+      })),
+      ...(source.columns == null ? {} : { columns: source.columns }),
+      group_by: source.groupBy,
+    })),
+    ...(spec.join == null ? {} : { join: spec.join }),
+    order_by: spec.orderBy.map((order) => ({ name: order.name, desc: order.descending })),
+    limit: spec.limit,
+  };
+}
+
 function parseJoinLink(value: unknown): GovDataJoinLink | null {
   if (!isRecord(value)) {
     return null;
@@ -817,6 +844,7 @@ export function parseGovDataPlan(value: unknown): GovDataPlan | null {
   }
 
   const planner = oneOf(value.planner, ["codex", "fallback"] as const);
+  const plannerError = value.planner_error == null ? undefined : nonEmptyString(value.planner_error);
   const title = nonEmptyString(value.title);
   const explanation = nonEmptyString(value.explanation);
   const spec = parseGovDataOperationSpec(value.spec);
@@ -827,6 +855,7 @@ export function parseGovDataPlan(value: unknown): GovDataPlan | null {
 
   if (
     planner == null ||
+    (value.planner_error != null && plannerError == null) ||
     title == null ||
     explanation == null ||
     spec == null ||
@@ -845,7 +874,15 @@ export function parseGovDataPlan(value: unknown): GovDataPlan | null {
     return null;
   }
 
-  return { planner, title, explanation, spec, result, pipeline: { nodes, links } };
+  return {
+    planner,
+    ...(plannerError == null ? {} : { plannerError }),
+    title,
+    explanation,
+    spec,
+    result,
+    pipeline: { nodes, links },
+  };
 }
 
 export function parseGovDataDatasetWiki(value: unknown): GovDataDatasetWiki | null {

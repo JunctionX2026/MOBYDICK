@@ -1,12 +1,22 @@
 "use client";
 
-import { linkRejection, ulid } from "@mobydick/domain";
+import {
+  linkRejection,
+  parseGovDataPlan,
+  parseGovDataRunResult,
+  serializeGovDataOperationSpec,
+  ulid,
+  type GovDataOperationSpec,
+  type GovDataPlan,
+  type GovDataRunResult,
+} from "@mobydick/domain";
 import { useMemo, useState, type ReactNode } from "react";
 import { graphql, useMutation } from "react-relay";
 import { buildContext } from "react-simplikit";
 import type { workflowStoreSaveMutation } from "@/__generated__/relay/workflowStoreSaveMutation.graphql";
 import { isGraphQLNodeKind, type GraphQLNodeKind } from "@/graphql/enums";
 import { NODE_STEP } from "./canvas-metrics";
+import { toGovDataOperationSpecWire } from "./govdata-wire";
 
 export type CanvasNodeKind = GraphQLNodeKind;
 
@@ -30,6 +40,17 @@ export interface CanvasLink {
   target: string;
 }
 
+export type WorkflowExecutionStatus = "idle" | "running" | "success" | "error";
+
+export interface WorkflowExecution {
+  status: WorkflowExecutionStatus;
+  nodeId: string | null;
+  nodeTitle: string | null;
+  request: { method: "POST"; path: string; body: unknown } | null;
+  result: GovDataRunResult | null;
+  error: string | null;
+}
+
 export type LinkRejection = ReturnType<typeof linkRejection>;
 
 export interface WorkflowStore {
@@ -38,8 +59,12 @@ export interface WorkflowStore {
   dirty: boolean;
   saving: boolean;
   error: string | null;
+  execution: WorkflowExecution;
+  plan: GovDataPlan | null;
   addNode: (kind: CanvasNodeKind, details?: { datasetId?: string | null; subtitle?: string | null; title?: string }) => string;
-  applyPipeline: (nodes: CanvasNode[], links: CanvasLink[]) => void;
+  applyPipeline: (nodes: CanvasNode[], links: CanvasLink[], plan?: GovDataPlan) => void;
+  executeLastNode: () => Promise<void>;
+  executeNode: (nodeId: string) => Promise<void>;
   lastAddedId: string | null;
   moveNodes: (moves: ReadonlyArray<{ id: string; position: CanvasPosition }>) => void;
   remove: (nodeIds: ReadonlySet<string>, linkIds: ReadonlySet<string>) => void;
@@ -71,6 +96,9 @@ const SaveWorkflow = graphql`
           source
           target
         }
+        operationSpecJson
+        requestDataJson
+        payloadSchemaJson
       }
     }
   }
@@ -112,6 +140,73 @@ export function toCanvasNodes(
   return { droppedCount: nodes.length - known.length, nodes: known };
 }
 
+const EMPTY_EXECUTION: WorkflowExecution = {
+  status: "idle",
+  nodeId: null,
+  nodeTitle: null,
+  request: null,
+  result: null,
+  error: null,
+};
+
+function errorMessage(value: unknown, fallback: string) {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return fallback;
+  }
+
+  const error = (value as Record<string, unknown>).error;
+
+  if (typeof error !== "object" || error === null || Array.isArray(error)) {
+    return fallback;
+  }
+
+  const message = (error as Record<string, unknown>).message;
+  return typeof message === "string" && message.trim() !== "" ? message : fallback;
+}
+
+async function loadExecutionPlan(question: string) {
+  const response = await fetch("/api/govdata/plan", {
+    body: JSON.stringify({ query: question }),
+    headers: { "content-type": "application/json" },
+    method: "POST",
+  });
+  const payload: unknown = await response.json();
+
+  if (!response.ok) {
+    throw new Error(errorMessage(payload, "질문을 실행 계획으로 바꾸지 못했어요."));
+  }
+
+  const plan = parseGovDataPlan(payload);
+
+  if (plan == null) {
+    throw new Error("실행 계획 응답이 데이터 계약과 맞지 않아요.");
+  }
+
+  return plan;
+}
+
+async function runExecutionSpec(spec: GovDataOperationSpec) {
+  const body = { spec: toGovDataOperationSpecWire(spec) };
+  const response = await fetch("/api/govdata/run", {
+    body: JSON.stringify(body),
+    headers: { "content-type": "application/json" },
+    method: "POST",
+  });
+  const payload: unknown = await response.json();
+
+  if (!response.ok) {
+    throw new Error(errorMessage(payload, "데이터 소스를 실행하지 못했어요."));
+  }
+
+  const result = parseGovDataRunResult(payload);
+
+  if (result == null) {
+    throw new Error("실행 응답이 데이터 계약과 맞지 않아요.");
+  }
+
+  return { body, result };
+}
+
 const DEFAULT_TITLES: Record<CanvasNodeKind, string> = {
   SOURCE: "데이터 소스",
   TRANSFORM: "변환",
@@ -136,20 +231,107 @@ export interface WorkflowProviderProps {
   initialLinks: readonly CanvasLink[];
   initialNodes: readonly CanvasNode[];
   projectId: string;
+  question: string;
+  initialOperationSpec: GovDataOperationSpec | null;
+  initialRequestData: Record<string, unknown>;
+  initialPayloadSchema: Record<string, unknown> | null;
 }
 
 export function WorkflowProvider({
   children,
   initialLinks,
   initialNodes,
+  initialOperationSpec,
+  initialPayloadSchema,
+  initialRequestData,
   projectId,
+  question,
 }: WorkflowProviderProps) {
   const [nodes, setNodes] = useState<CanvasNode[]>(() => initialNodes.map((node) => ({ ...node })));
   const [links, setLinks] = useState<CanvasLink[]>(() => initialLinks.map((link) => ({ ...link })));
   const [dirty, setDirty] = useState(false);
   const [lastAddedId, setLastAddedId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [execution, setExecution] = useState<WorkflowExecution>(EMPTY_EXECUTION);
+  const [plan, setPlan] = useState<GovDataPlan | null>(null);
+  const [operationSpec, setOperationSpec] = useState<GovDataOperationSpec | null>(initialOperationSpec);
+  const [requestData] = useState(initialRequestData);
+  const [payloadSchema] = useState(initialPayloadSchema);
   const [commit, saving] = useMutation<workflowStoreSaveMutation>(SaveWorkflow);
+
+  const workflowInput = (
+    nextNodes: readonly CanvasNode[],
+    nextLinks: readonly CanvasLink[],
+    nextSpec: GovDataOperationSpec | null,
+  ) => ({
+    id: projectId,
+    nodes: nextNodes,
+    links: nextLinks,
+    operationSpecJson: nextSpec == null ? null : JSON.stringify(serializeGovDataOperationSpec(nextSpec)),
+    requestDataJson: JSON.stringify(requestData),
+    payloadSchemaJson: payloadSchema == null ? null : JSON.stringify(payloadSchema),
+  });
+
+  const executeNode = async (nodeId: string) => {
+    const node = nodes.find((candidate) => candidate.id === nodeId);
+
+    if (node == null) {
+      return;
+    }
+
+    setExecution({
+      status: "running",
+      nodeId: node.id,
+      nodeTitle: node.title,
+      request: null,
+      result: null,
+      error: null,
+    });
+
+    try {
+      const currentSpec = plan?.spec ?? operationSpec ?? (await loadExecutionPlan(question)).spec;
+
+      if (plan == null && operationSpec == null) {
+        setOperationSpec(currentSpec);
+      }
+
+      const source = currentSpec.sources.find((candidate) => candidate.datasetId === node.datasetId);
+
+      if (node.kind === "SOURCE" && source == null) {
+        throw new Error("소스 노드에 실행할 데이터셋이 없어요.");
+      }
+
+      const spec = node.kind === "SOURCE" && source != null
+        ? { sources: [source], orderBy: [], limit: currentSpec.limit }
+        : currentSpec;
+      const { body, result } = await runExecutionSpec(spec);
+
+      setExecution({
+        status: "success",
+        nodeId: node.id,
+        nodeTitle: node.title,
+        request: { method: "POST", path: "/api/govdata/run", body },
+        result,
+        error: null,
+      });
+    } catch (reason) {
+      setExecution((previous) => ({
+        ...previous,
+        status: "error",
+        error: reason instanceof Error ? reason.message : "노드를 실행하지 못했어요.",
+      }));
+    }
+  };
+
+  const executeLastNode = async () => {
+    const output = nodes.find((node) => node.kind === "OUTPUT");
+    const sink = output ?? nodes.find((node) => !links.some((link) => link.source === node.id));
+    const last = sink ?? nodes.at(-1);
+
+    if (last != null) {
+      await executeNode(last.id);
+    }
+  };
 
   const store = useMemo<WorkflowStore>(
     () => ({
@@ -158,6 +340,8 @@ export function WorkflowProvider({
       dirty,
       saving,
       error,
+      execution,
+      plan,
       addNode: (kind, details) => {
         const id = ulid();
 
@@ -172,19 +356,22 @@ export function WorkflowProvider({
             position: nextPosition(previous),
           },
         ]);
+        setOperationSpec(null);
         setLastAddedId(id);
         setDirty(true);
 
         return id;
       },
-      applyPipeline: (nextNodes, nextLinks) => {
+      applyPipeline: (nextNodes, nextLinks, nextPlan) => {
         setNodes(nextNodes);
         setLinks(nextLinks);
+        setPlan(nextPlan ?? null);
+        setOperationSpec(nextPlan?.spec ?? null);
         setLastAddedId(null);
         setError(null);
         setDirty(true);
         commit({
-          variables: { input: { id: projectId, nodes: nextNodes, links: nextLinks } },
+          variables: { input: workflowInput(nextNodes, nextLinks, nextPlan?.spec ?? null) },
           onCompleted: (_response, errors) => {
             if (errors != null && errors.length > 0) {
               setError(errors[0]?.message ?? "생성한 파이프라인을 저장하지 못했어요.");
@@ -221,6 +408,7 @@ export function WorkflowProvider({
               !linkIds.has(link.id) && !nodeIds.has(link.source) && !nodeIds.has(link.target),
           ),
         );
+        setOperationSpec(null);
         setDirty(true);
       },
       connect: (source, target) => {
@@ -233,13 +421,16 @@ export function WorkflowProvider({
             ? previous
             : [...previous, { id: ulid(), source, target }],
         );
+        setOperationSpec(null);
         setDirty(true);
       },
       rejectionFor: (source, target) => linkRejection(links, source, target),
+      executeLastNode,
+      executeNode,
       save: () => {
         setError(null);
         commit({
-          variables: { input: { id: projectId, nodes, links } },
+          variables: { input: workflowInput(nodes, links, operationSpec) },
           onCompleted: (_response, errors) => {
             if (errors != null && errors.length > 0) {
               setError(errors[0]?.message ?? "워크플로를 저장하지 못했어요.");
@@ -252,7 +443,7 @@ export function WorkflowProvider({
         });
       },
     }),
-    [commit, dirty, error, lastAddedId, links, nodes, projectId, saving],
+    [commit, dirty, error, execution, executeLastNode, executeNode, lastAddedId, links, nodes, operationSpec, payloadSchema, plan, projectId, requestData, saving],
   );
 
   return <StoreProvider {...store}>{children}</StoreProvider>;

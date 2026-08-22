@@ -92,43 +92,45 @@ describe("GovData response parsers", () => {
   });
 
   it("accepts a planner response with a pipeline and JSON output", () => {
-    expect(
-      parseGovDataPlan({
-        planner: "codex",
-        title: "시군별 시설 수",
-        explanation: "검증된 데이터 소스를 조인했어요.",
-        spec,
-        pipeline: {
-          nodes: [
-            {
-              id: "source-1",
-              kind: "SOURCE",
-              title: "노인복지시설",
-              subtitle: "100행",
-              dataset_id: "15143795",
-              position: { x: 64, y: 64 },
-            },
-            {
-              id: "output-1",
-              kind: "OUTPUT",
-              title: "JSON 결과",
-              subtitle: "API · MCP 출력",
-              dataset_id: null,
-              position: { x: 336, y: 64 },
-            },
-          ],
-          links: [{ id: "link-1", source: "source-1", target: "output-1" }],
-        },
-        result: {
-          columns: ["key", "welfare"],
-          rows: [["포항시", 10]],
-          row_count: 1,
-          sources: [{ alias: "a", dataset_id: "15143795", title: "노인복지시설" }],
-          dropped_detail: [],
-          output: [{ region: "포항시", count: 10 }],
-        },
-      }),
-    ).not.toBeNull();
+    const plan = parseGovDataPlan({
+      planner: "codex",
+      planner_error: "optional diagnostic",
+      title: "시군별 시설 수",
+      explanation: "검증된 데이터 소스를 조인했어요.",
+      spec,
+      pipeline: {
+        nodes: [
+          {
+            id: "source-1",
+            kind: "SOURCE",
+            title: "노인복지시설",
+            subtitle: "100행",
+            dataset_id: "15143795",
+            position: { x: 64, y: 64 },
+          },
+          {
+            id: "output-1",
+            kind: "OUTPUT",
+            title: "JSON 결과",
+            subtitle: "API · MCP 출력",
+            dataset_id: null,
+            position: { x: 336, y: 64 },
+          },
+        ],
+        links: [{ id: "link-1", source: "source-1", target: "output-1" }],
+      },
+      result: {
+        columns: ["key", "welfare"],
+        rows: [["포항시", 10]],
+        row_count: 1,
+        sources: [{ alias: "a", dataset_id: "15143795", title: "노인복지시설" }],
+        dropped_detail: [],
+        output: [{ region: "포항시", count: 10 }],
+      },
+    });
+
+    expect(plan).not.toBeNull();
+    expect(plan?.plannerError).toBe("optional diagnostic");
   });
 
   it("rejects a run response with a missing dropped-detail field", () => {

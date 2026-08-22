@@ -3,9 +3,10 @@
 import { Button, Callout, Input, Spinner, Textarea } from "@mobydick/design-system";
 import { SparklesFilledIcon } from "@mobydick/icon";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { graphql, useMutation } from "react-relay";
 import type { projectPickerCreateMutation } from "@/__generated__/relay/projectPickerCreateMutation.graphql";
+import { dialogTransitionClassName, useDialogTransition } from "./dialog-transition";
 
 const CreateProject = graphql`
   mutation projectPickerCreateMutation($input: CreateProjectInput!) {
@@ -26,27 +27,11 @@ export interface NewProjectDialogProps {
 
 export function NewProjectDialog({ onOpenChange, open }: NewProjectDialogProps) {
   const router = useRouter();
-  const dialogRef = useRef<HTMLDialogElement>(null);
+  const dialogRef = useDialogTransition(open);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [create, creating] = useMutation<projectPickerCreateMutation>(CreateProject);
-
-  useEffect(() => {
-    const dialog = dialogRef.current;
-
-    if (dialog == null) {
-      return;
-    }
-
-    if (open && !dialog.open) {
-      dialog.showModal();
-    }
-
-    if (!open && dialog.open) {
-      dialog.close();
-    }
-  }, [open]);
 
   useEffect(() => {
     if (open) {
@@ -92,7 +77,7 @@ export function NewProjectDialog({ onOpenChange, open }: NewProjectDialogProps) 
     <dialog
       aria-describedby="new-project-description"
       aria-labelledby="new-project-title"
-      className="m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-lg overflow-y-auto rounded-surface border border-stroke-neutral-subtle bg-bg-layer-modal p-0 text-fg-neutral shadow-elevation-overlay backdrop:bg-bg-overlay"
+      className={`${dialogTransitionClassName} m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-lg overflow-y-auto rounded-surface border border-stroke-neutral-subtle bg-bg-layer-modal p-0 text-fg-neutral shadow-elevation-overlay backdrop:bg-bg-overlay`}
       id="new-project-dialog"
       onClick={(event) => {
         if (event.target === event.currentTarget) {
@@ -100,6 +85,10 @@ export function NewProjectDialog({ onOpenChange, open }: NewProjectDialogProps) 
         }
       }}
       onClose={close}
+      onCancel={(event) => {
+        event.preventDefault();
+        close();
+      }}
       ref={dialogRef}
     >
       <form className="flex flex-col gap-6 p-6" onSubmit={submit}>

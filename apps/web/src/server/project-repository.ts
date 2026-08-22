@@ -3,6 +3,7 @@ import {
   createProject,
   deriveProjectPhase,
   parseProject,
+  serializeGovDataOperationSpec,
   touchProject,
   ulid,
   type Project,
@@ -64,11 +65,18 @@ function toProject(row: ProjectRow): Project | null {
 }
 
 function toRow(project: Project) {
+  const workflow = {
+    ...project.workflow,
+    ...(project.workflow.operationSpec == null
+      ? { operationSpec: project.workflow.operationSpec ?? null }
+      : { operationSpec: serializeGovDataOperationSpec(project.workflow.operationSpec) }),
+  };
+
   return [
     project.id,
     project.name,
     project.question,
-    JSON.stringify(project.workflow),
+    JSON.stringify(workflow),
     project.deploymentId,
     project.createdAt,
     project.updatedAt,

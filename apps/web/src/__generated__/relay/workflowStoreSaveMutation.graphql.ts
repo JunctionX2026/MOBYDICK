@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<9058867137a3d712fa0c89faef1e7f6c>>
+ * @generated SignedSource<<c39dc685708642c6e2b5856fee3bae4c>>
  * @lightSyntaxTransform
  */
 
@@ -14,6 +14,9 @@ export type SaveWorkflowInput = {
   id: string;
   links: ReadonlyArray<WorkflowLinkInput>;
   nodes: ReadonlyArray<WorkflowNodeInput>;
+  operationSpecJson?: string | null | undefined;
+  payloadSchemaJson?: string | null | undefined;
+  requestDataJson?: string | null | undefined;
 };
 export type WorkflowNodeInput = {
   datasetId?: string | null | undefined;
@@ -57,6 +60,9 @@ export type workflowStoreSaveMutation$data = {
         readonly subtitle: string | null | undefined;
         readonly title: string;
       }>;
+      readonly operationSpecJson: string | null | undefined;
+      readonly payloadSchemaJson: string | null | undefined;
+      readonly requestDataJson: string;
     };
   };
 };
@@ -208,6 +214,27 @@ v2 = [
               }
             ],
             "storageKey": null
+          },
+          {
+            "alias": null,
+            "args": null,
+            "kind": "ScalarField",
+            "name": "operationSpecJson",
+            "storageKey": null
+          },
+          {
+            "alias": null,
+            "args": null,
+            "kind": "ScalarField",
+            "name": "requestDataJson",
+            "storageKey": null
+          },
+          {
+            "alias": null,
+            "args": null,
+            "kind": "ScalarField",
+            "name": "payloadSchemaJson",
+            "storageKey": null
           }
         ],
         "storageKey": null
@@ -234,16 +261,16 @@ return {
     "selections": (v2/*:: as any*/)
   },
   "params": {
-    "cacheID": "3ca4cca30085f5b5c23fe57b78014d23",
+    "cacheID": "77c121a911f1cbd0a0dbf4e5efefd23e",
     "id": null,
     "metadata": {},
     "name": "workflowStoreSaveMutation",
     "operationKind": "mutation",
-    "text": "mutation workflowStoreSaveMutation(\n  $input: SaveWorkflowInput!\n) {\n  saveWorkflow(input: $input) {\n    id\n    phase\n    updatedAt\n    workflow {\n      nodes {\n        id\n        kind\n        title\n        subtitle\n        datasetId\n        position {\n          x\n          y\n        }\n      }\n      links {\n        id\n        source\n        target\n      }\n    }\n  }\n}\n"
+    "text": "mutation workflowStoreSaveMutation(\n  $input: SaveWorkflowInput!\n) {\n  saveWorkflow(input: $input) {\n    id\n    phase\n    updatedAt\n    workflow {\n      nodes {\n        id\n        kind\n        title\n        subtitle\n        datasetId\n        position {\n          x\n          y\n        }\n      }\n      links {\n        id\n        source\n        target\n      }\n      operationSpecJson\n      requestDataJson\n      payloadSchemaJson\n    }\n  }\n}\n"
   }
 };
 })();
 
-(node as any).hash = "2a424841b0de9d883514d39a368b0552";
+(node as any).hash = "4f963e79805f1011ba85e95f8fe37471";
 
 export default node;

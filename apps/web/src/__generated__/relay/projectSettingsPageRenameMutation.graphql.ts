@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<7e8e96ea8e307213bac77b23afb8889c>>
+ * @generated SignedSource<<9ae5b408dbb9234422f38de4e10e416d>>
  * @lightSyntaxTransform
  */
 
@@ -12,19 +12,19 @@ export type RenameProjectInput = {
   id: string;
   name: string;
 };
-export type projectNavigationRenameMutation$variables = {
+export type projectSettingsPageRenameMutation$variables = {
   input: RenameProjectInput;
 };
-export type projectNavigationRenameMutation$data = {
+export type projectSettingsPageRenameMutation$data = {
   readonly renameProject: {
     readonly id: string;
     readonly name: string;
     readonly updatedAt: string;
   };
 };
-export type projectNavigationRenameMutation = {
-  response: projectNavigationRenameMutation$data;
-  variables: projectNavigationRenameMutation$variables;
+export type projectSettingsPageRenameMutation = {
+  response: projectSettingsPageRenameMutation$data;
+  variables: projectSettingsPageRenameMutation$variables;
 };
 
 const node: ConcreteRequest = (function(){
@@ -80,7 +80,7 @@ return {
     "argumentDefinitions": (v0/*:: as any*/),
     "kind": "Fragment",
     "metadata": null,
-    "name": "projectNavigationRenameMutation",
+    "name": "projectSettingsPageRenameMutation",
     "selections": (v1/*:: as any*/),
     "type": "Mutation",
     "abstractKey": null
@@ -89,20 +89,20 @@ return {
   "operation": {
     "argumentDefinitions": (v0/*:: as any*/),
     "kind": "Operation",
-    "name": "projectNavigationRenameMutation",
+    "name": "projectSettingsPageRenameMutation",
     "selections": (v1/*:: as any*/)
   },
   "params": {
-    "cacheID": "eb12629a869fa6dd7a94338fef9361e5",
+    "cacheID": "f6c91b580943117597ab6e2f82ee51e1",
     "id": null,
     "metadata": {},
-    "name": "projectNavigationRenameMutation",
+    "name": "projectSettingsPageRenameMutation",
     "operationKind": "mutation",
-    "text": "mutation projectNavigationRenameMutation(\n  $input: RenameProjectInput!\n) {\n  renameProject(input: $input) {\n    id\n    name\n    updatedAt\n  }\n}\n"
+    "text": "mutation projectSettingsPageRenameMutation(\n  $input: RenameProjectInput!\n) {\n  renameProject(input: $input) {\n    id\n    name\n    updatedAt\n  }\n}\n"
   }
 };
 })();
 
-(node as any).hash = "96367b51db9995f1456c5d8a7047cfd6";
+(node as any).hash = "99508f6a6aeae71c2b4bf330a546dc96";
 
 export default node;

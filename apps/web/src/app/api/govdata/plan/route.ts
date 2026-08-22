@@ -1,4 +1,4 @@
-import { GovDataSourceError, planGovData } from "@/server/govdata-source";
+import { GovDataSourceError, planGovData, serializeGovDataPlan } from "@/server/govdata-source";
 import { errorResponse, isRecord, requestJson } from "@/server/govdata-http";
 
 export async function POST(request: Request) {
@@ -11,7 +11,7 @@ export async function POST(request: Request) {
       throw new GovDataSourceError("실행 계획 질문을 입력하세요.", 400);
     }
 
-    return Response.json(await planGovData(query, schema));
+    return Response.json(serializeGovDataPlan(await planGovData(query, schema)));
   } catch (error) {
     return errorResponse(error);
   }

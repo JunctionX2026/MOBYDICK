@@ -22,7 +22,17 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel, Field
 
-from .core import Catalog, Compiler, _codex_enabled, codex_plan, pipeline_for_spec, suggest_spec, single_spec, query_region
+from .core import (
+    Catalog,
+    Compiler,
+    _codex_enabled,
+    _planner_contract_error,
+    codex_plan,
+    pipeline_for_spec,
+    query_region,
+    single_spec,
+    suggest_spec,
+)
 from .live_api import LiveApiError, execute_live_api, live_api_catalog
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -137,10 +147,13 @@ def plan(req: PlanReq):
     single = single_spec(cat, ids[0], prefer, query_region(req.query)) if hits else None
     deterministic = sets[0]["spec"] if multi and sets else single
 
-    out = None
+    out: dict | None = None
     if planning_enabled():
         try:
             out = codex_plan(cat, req.query, hits, sets)
+            contract_error = _planner_contract_error(out)
+            if contract_error is not None:
+                raise ValueError(f"planner contract: {contract_error}")
             out["planner"] = "codex"
         except Exception as error:                            # noqa: BLE001
             out = fallback_plan(req.query, hits, sets, deterministic)
@@ -148,10 +161,13 @@ def plan(req: PlanReq):
     else:
         out = fallback_plan(req.query, hits, sets, deterministic)
 
-    if not isinstance(out.get("spec"), dict):
+    if not isinstance(out, dict) or _planner_contract_error(out) is not None:
         out = fallback_plan(req.query, hits, sets, deterministic)
 
     try:
+        contract_error = _planner_contract_error(out)
+        if contract_error is not None:
+            raise ValueError(f"planner contract: {contract_error}")
         comp.compile(out["spec"])
         out["pipeline"] = pipeline_for_spec(cat, out["spec"])
         out["result"] = comp.run(out["spec"], req.output_schema)
@@ -159,6 +175,10 @@ def plan(req: PlanReq):
         if deterministic is None or out.get("spec") == deterministic:
             raise HTTPException(422, f"실행 계획을 검증하지 못했어요: {e}")
         out = fallback_plan(req.query, hits, sets, deterministic)
+        out["planner_error"] = f"codex plan rejected: {e}"
+        contract_error = _planner_contract_error(out)
+        if contract_error is not None:
+            raise HTTPException(422, f"fallback 계획을 검증하지 못했어요: {contract_error}")
         out["pipeline"] = pipeline_for_spec(cat, out["spec"])
         out["result"] = comp.run(out["spec"], req.output_schema)
     return out

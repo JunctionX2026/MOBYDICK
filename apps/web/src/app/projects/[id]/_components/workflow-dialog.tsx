@@ -3,9 +3,10 @@
 import { Button, Callout, Spinner } from "@mobydick/design-system";
 import { TrashIcon } from "@mobydick/icon";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { match } from "ts-pattern";
 import type { CanvasNode, CanvasNodeKind, LinkRejection } from "./workflow-store";
+import { dialogTransitionClassName, useDialogTransition } from "@/app/_components/dialog-transition";
 
 interface WorkflowDialogProps {
   children: ReactNode;
@@ -24,36 +25,24 @@ export function WorkflowDialog({
   open,
   title,
 }: WorkflowDialogProps) {
-  const dialogRef = useRef<HTMLDialogElement>(null);
+  const dialogRef = useDialogTransition(open);
   const descriptionId = `${id}-description`;
   const titleId = `${id}-title`;
-
-  useEffect(() => {
-    const dialog = dialogRef.current;
-
-    if (dialog == null) {
-      return;
-    }
-
-    if (open && !dialog.open) {
-      dialog.showModal();
-    }
-
-    if (!open && dialog.open) {
-      dialog.close();
-    }
-  }, [open]);
 
   return (
     <dialog
       aria-describedby={description == null ? undefined : descriptionId}
       aria-labelledby={titleId}
-      className="m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-lg overflow-y-auto rounded-surface border border-stroke-neutral-subtle bg-bg-layer-modal p-0 text-fg-neutral shadow-elevation-overlay backdrop:bg-bg-overlay"
+      className={`${dialogTransitionClassName} m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-lg overflow-y-auto rounded-surface border border-stroke-neutral-subtle bg-bg-layer-modal p-0 text-fg-neutral shadow-elevation-overlay backdrop:bg-bg-overlay`}
       id={id}
       onClick={(event) => {
         if (event.target === event.currentTarget) {
           onOpenChange(false);
         }
+      }}
+      onCancel={(event) => {
+        event.preventDefault();
+        onOpenChange(false);
       }}
       onClose={() => onOpenChange(false)}
       ref={dialogRef}
@@ -346,41 +335,60 @@ export function DeploymentDialog({
 }) {
   const router = useRouter();
   const [deployment, setDeployment] = useState<DeploymentResponse | null>(null);
-  const [selectedMode, setSelectedMode] = useState<"api" | "mcp">("api");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState<"api" | "mcp" | null>(null);
 
   useEffect(() => {
-    if (open) {
-      setDeployment(null);
-      setSelectedMode("api");
-      setError(null);
+    if (!open) {
+      return;
     }
-  }, [open]);
 
-  const deploy = async (mode: "api" | "mcp") => {
-    setSelectedMode(mode);
+    let cancelled = false;
+    setDeployment(null);
     setLoading(true);
     setError(null);
+    setCopied(null);
 
-    try {
-      const response = await fetch(`/api/projects/${projectId}/deploy`, {
-        body: JSON.stringify({ mode }),
-        headers: { "content-type": "application/json" },
-        method: "POST",
-      });
-      const payload: unknown = await response.json();
+    void (async () => {
+      try {
+        const response = await fetch(`/api/projects/${projectId}/deploy`, {
+          headers: { "content-type": "application/json" },
+          method: "POST",
+        });
+        const payload: unknown = await response.json();
 
-      if (!response.ok || !isDeploymentResponse(payload)) {
-        throw new Error("배포 주소를 만들지 못했어요.");
+        if (!response.ok || !isDeploymentResponse(payload)) {
+          throw new Error("배포 주소를 만들지 못했어요.");
+        }
+
+        if (!cancelled) {
+          setDeployment(payload);
+          router.refresh();
+        }
+      } catch (reason) {
+        if (!cancelled) {
+          setError(reason instanceof Error ? reason.message : "배포 주소를 만들지 못했어요.");
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
+    })();
 
-      setDeployment(payload);
-      router.refresh();
-    } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "배포 주소를 만들지 못했어요.");
-    } finally {
-      setLoading(false);
+    return () => {
+      cancelled = true;
+    };
+  }, [open, projectId, router]);
+
+  const copy = async (mode: "api" | "mcp", url: string) => {
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(mode);
+      window.setTimeout(() => setCopied((previous) => (previous === mode ? null : previous)), 1600);
+    } catch {
+      setError("주소를 복사하지 못했어요. 주소를 직접 선택해 주세요.");
     }
   };
 
@@ -392,44 +400,32 @@ export function DeploymentDialog({
       open={open}
       title="배포"
     >
-      <div className="flex gap-2">
-        <Button
-          className="flex-1"
-          disabled={loading}
-          onClick={() => void deploy("api")}
-          size="small"
-          variant={selectedMode === "api" ? "brandSolid" : "neutralWeak"}
-        >
-          {loading && selectedMode === "api" && <Spinner aria-hidden label="" size="small" variant="current" />}
-          API 주소 생성
-        </Button>
-        <Button
-          className="flex-1"
-          disabled={loading}
-          onClick={() => void deploy("mcp")}
-          size="small"
-          variant={selectedMode === "mcp" ? "brandSolid" : "neutralWeak"}
-        >
-          {loading && selectedMode === "mcp" && <Spinner aria-hidden label="" size="small" variant="current" />}
-          MCP 주소 생성
-        </Button>
-      </div>
-
+      {loading && (
+        <div className="text-fg-neutral-muted flex items-center gap-2 text-sm" role="status">
+          <Spinner aria-hidden label="" size="small" variant="secondary" />
+          API와 MCP 주소를 준비하는 중이에요.
+        </div>
+      )}
       {error != null && <p className="text-fg-critical text-sm">{error}</p>}
       {deployment != null && (
         <div className="flex flex-col gap-3">
-          <label className="flex flex-col gap-1.5">
-            <span className="text-fg-neutral text-sm font-medium">API endpoint</span>
-            <code className="bg-bg-layer-default text-fg-neutral-muted overflow-x-auto rounded-control p-2 text-xs">
-              {deployment.apiUrl}
-            </code>
-          </label>
-          <label className="flex flex-col gap-1.5">
-            <span className="text-fg-neutral text-sm font-medium">MCP endpoint</span>
-            <code className="bg-bg-layer-default text-fg-neutral-muted overflow-x-auto rounded-control p-2 text-xs">
-              {deployment.mcpUrl}
-            </code>
-          </label>
+          {(["api", "mcp"] as const).map((mode) => {
+            const url = mode === "api" ? deployment.apiUrl : deployment.mcpUrl;
+
+            return (
+              <div className="flex flex-col gap-1.5" key={mode}>
+                <span className="text-fg-neutral text-sm font-medium">{mode === "api" ? "API endpoint" : "MCP endpoint"}</span>
+                <div className="flex min-w-0 items-center gap-2">
+                  <code className="bg-bg-layer-default text-fg-neutral-muted min-w-0 flex-1 overflow-x-auto rounded-control p-2 text-xs">
+                    {url}
+                  </code>
+                  <Button onClick={() => void copy(mode, url)} size="small" variant="outline">
+                    {copied === mode ? "복사됨" : "복사"}
+                  </Button>
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
 
