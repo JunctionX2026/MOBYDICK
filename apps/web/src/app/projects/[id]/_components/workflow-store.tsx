@@ -1,11 +1,12 @@
 "use client";
 
-import { ulid } from "@mobydick/domain";
+import { linkRejection, ulid } from "@mobydick/domain";
 import { useMemo, useState, type ReactNode } from "react";
 import { graphql, useMutation } from "react-relay";
 import { buildContext } from "react-simplikit";
 import type { workflowStoreSaveMutation } from "@/__generated__/relay/workflowStoreSaveMutation.graphql";
 import { isGraphQLNodeKind, type GraphQLNodeKind } from "@/graphql/enums";
+import { NODE_STEP } from "./canvas-metrics";
 
 export type CanvasNodeKind = GraphQLNodeKind;
 
@@ -28,17 +29,20 @@ export interface CanvasLink {
   target: string;
 }
 
+export type LinkRejection = ReturnType<typeof linkRejection>;
+
 export interface WorkflowStore {
   nodes: CanvasNode[];
   links: CanvasLink[];
   dirty: boolean;
   saving: boolean;
   error: string | null;
-  addNode: (kind: CanvasNodeKind, position: CanvasPosition) => void;
-  moveNode: (id: string, position: CanvasPosition) => void;
-  removeNode: (id: string) => void;
+  addNode: (kind: CanvasNodeKind) => string;
+  lastAddedId: string | null;
+  moveNodes: (moves: ReadonlyArray<{ id: string; position: CanvasPosition }>) => void;
+  remove: (nodeIds: ReadonlySet<string>, linkIds: ReadonlySet<string>) => void;
   connect: (source: string, target: string) => void;
-  disconnect: (id: string) => void;
+  rejectionFor: (source: string, target: string) => LinkRejection;
   save: () => void;
 }
 
@@ -110,6 +114,18 @@ const DEFAULT_TITLES: Record<CanvasNodeKind, string> = {
   OUTPUT: "출력",
 };
 
+/** New nodes land to the right of the pipe so the palette never stacks them. */
+function nextPosition(nodes: readonly CanvasNode[]): CanvasPosition {
+  const rightmost = nodes.reduce<CanvasNode | null>(
+    (found, node) => (found == null || node.position.x > found.position.x ? node : found),
+    null,
+  );
+
+  return rightmost == null
+    ? { x: 0, y: 0 }
+    : { x: rightmost.position.x + NODE_STEP, y: rightmost.position.y };
+}
+
 export interface WorkflowProviderProps {
   children: ReactNode;
   initialLinks: readonly CanvasLink[];
@@ -126,6 +142,7 @@ export function WorkflowProvider({
   const [nodes, setNodes] = useState<CanvasNode[]>(() => initialNodes.map((node) => ({ ...node })));
   const [links, setLinks] = useState<CanvasLink[]>(() => initialLinks.map((link) => ({ ...link })));
   const [dirty, setDirty] = useState(false);
+  const [lastAddedId, setLastAddedId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [commit, saving] = useMutation<workflowStoreSaveMutation>(SaveWorkflow);
 
@@ -136,46 +153,58 @@ export function WorkflowProvider({
       dirty,
       saving,
       error,
-      addNode: (kind, position) => {
+      addNode: (kind) => {
+        const id = ulid();
+
         setNodes((previous) => [
           ...previous,
-          {
-            id: ulid(),
-            kind,
-            title: DEFAULT_TITLES[kind],
-            subtitle: null,
-            position,
-          },
+          { id, kind, title: DEFAULT_TITLES[kind], subtitle: null, position: nextPosition(previous) },
         ]);
+        setLastAddedId(id);
         setDirty(true);
+
+        return id;
       },
-      moveNode: (id, position) => {
+      lastAddedId,
+      moveNodes: (moves) => {
+        const next = new Map(moves.map((move) => [move.id, move.position]));
+
         setNodes((previous) =>
-          previous.map((node) => (node.id === id ? { ...node, position } : node)),
+          previous.map((node) => {
+            const position = next.get(node.id);
+
+            return position == null ? node : { ...node, position };
+          }),
         );
         setDirty(true);
       },
-      removeNode: (id) => {
-        setNodes((previous) => previous.filter((node) => node.id !== id));
-        setLinks((previous) => previous.filter((link) => link.source !== id && link.target !== id));
+      remove: (nodeIds, linkIds) => {
+        if (nodeIds.size === 0 && linkIds.size === 0) {
+          return;
+        }
+
+        setNodes((previous) => previous.filter((node) => !nodeIds.has(node.id)));
+        setLinks((previous) =>
+          previous.filter(
+            (link) =>
+              !linkIds.has(link.id) && !nodeIds.has(link.source) && !nodeIds.has(link.target),
+          ),
+        );
         setDirty(true);
       },
       connect: (source, target) => {
-        if (source === target) {
+        if (linkRejection(links, source, target) != null) {
           return;
         }
 
         setLinks((previous) =>
-          previous.some((link) => link.source === source && link.target === target)
+          linkRejection(previous, source, target) != null
             ? previous
             : [...previous, { id: ulid(), source, target }],
         );
         setDirty(true);
       },
-      disconnect: (id) => {
-        setLinks((previous) => previous.filter((link) => link.id !== id));
-        setDirty(true);
-      },
+      rejectionFor: (source, target) => linkRejection(links, source, target),
       save: () => {
         setError(null);
         commit({
@@ -192,7 +221,7 @@ export function WorkflowProvider({
         });
       },
     }),
-    [commit, dirty, error, links, nodes, projectId, saving],
+    [commit, dirty, error, lastAddedId, links, nodes, projectId, saving],
   );
 
   return <StoreProvider {...store}>{children}</StoreProvider>;

@@ -11,6 +11,7 @@ export {
 export { isUlid, ulid, ULID_LENGTH } from "./ulid";
 export {
   EMPTY_WORKFLOW,
+  linkRejection,
   parseWorkflow,
   type Workflow,
   type WorkflowLink,

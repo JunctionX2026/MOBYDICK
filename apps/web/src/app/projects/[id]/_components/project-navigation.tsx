@@ -2,14 +2,15 @@
 
 import { Badge, Button, Input, SideNavigation, Skeleton } from "@mobydick/design-system";
 import {
+  AffiliateFilledIcon,
   ChevronLeftIcon,
-  DatabaseIcon,
-  PanelLeftIcon,
+  DatabaseFilledIcon,
+  PanelLeftFilledIcon,
   PencilIcon,
-  PlayIcon,
-  PlusIcon,
-  RocketIcon,
-  WorkflowIcon,
+  PlayFilledIcon,
+  SendFilledIcon,
+  SitemapFilledIcon,
+  TransformFilledIcon,
 } from "@mobydick/icon";
 import Link from "next/link";
 import { useState } from "react";
@@ -28,11 +29,15 @@ const RenameProject = graphql`
   }
 `;
 
-const PALETTE: ReadonlyArray<{ kind: CanvasNodeKind; label: string; Icon: typeof DatabaseIcon }> = [
-  { kind: "SOURCE", label: "데이터 소스", Icon: DatabaseIcon },
-  { kind: "TRANSFORM", label: "변환", Icon: WorkflowIcon },
-  { kind: "JOIN", label: "조인", Icon: PlusIcon },
-  { kind: "OUTPUT", label: "출력", Icon: RocketIcon },
+const PALETTE: ReadonlyArray<{
+  kind: CanvasNodeKind;
+  label: string;
+  Icon: typeof DatabaseFilledIcon;
+}> = [
+  { kind: "SOURCE", label: "데이터 소스", Icon: DatabaseFilledIcon },
+  { kind: "TRANSFORM", label: "변환", Icon: TransformFilledIcon },
+  { kind: "JOIN", label: "조인", Icon: AffiliateFilledIcon },
+  { kind: "OUTPUT", label: "출력", Icon: SendFilledIcon },
 ];
 
 function phaseBadge(phase: string) {
@@ -125,7 +130,7 @@ export function ProjectNavigation({ name, phase, projectId, question }: ProjectN
       </SideNavigation.Header>
 
       <SideNavigation.Trigger aria-label="사이드바 접기">
-        <PanelLeftIcon />
+        <PanelLeftFilledIcon />
       </SideNavigation.Trigger>
 
       <SideNavigation.Content>
@@ -141,7 +146,7 @@ export function ProjectNavigation({ name, phase, projectId, question }: ProjectN
           {PALETTE.map(({ Icon, kind, label }) => (
             <SideNavigation.Item
               key={kind}
-              onClick={() => addNode(kind, { x: 120, y: 120 })}
+              onClick={() => addNode(kind)}
               title={label}
             >
               <SideNavigation.ItemPrefixIcon svg={<Icon size={20} />} />
@@ -153,15 +158,15 @@ export function ProjectNavigation({ name, phase, projectId, question }: ProjectN
         <SideNavigation.Group>
           <SideNavigation.GroupLabel>단계</SideNavigation.GroupLabel>
           <SideNavigation.Item current title="캔버스">
-            <SideNavigation.ItemPrefixIcon svg={<WorkflowIcon size={20} />} />
+            <SideNavigation.ItemPrefixIcon svg={<SitemapFilledIcon size={20} />} />
             <SideNavigation.ItemLabel>캔버스</SideNavigation.ItemLabel>
           </SideNavigation.Item>
           <SideNavigation.Item disabled title="실행은 아직 준비 중이에요">
-            <SideNavigation.ItemPrefixIcon svg={<PlayIcon size={20} />} />
+            <SideNavigation.ItemPrefixIcon svg={<PlayFilledIcon size={20} />} />
             <SideNavigation.ItemLabel>실행</SideNavigation.ItemLabel>
           </SideNavigation.Item>
           <SideNavigation.Item disabled title="배포는 아직 준비 중이에요">
-            <SideNavigation.ItemPrefixIcon svg={<RocketIcon size={20} />} />
+            <SideNavigation.ItemPrefixIcon svg={<SendFilledIcon size={20} />} />
             <SideNavigation.ItemLabel>배포</SideNavigation.ItemLabel>
           </SideNavigation.Item>
         </SideNavigation.Group>

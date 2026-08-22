@@ -132,3 +132,47 @@ export function parseWorkflow(value: unknown): Workflow | null {
 
   return { nodes, links };
 }
+
+/**
+ * The pipe is serial, so a link that lets a node reach itself again is refused
+ * at the canvas rather than at save time. Returns why the link is impossible so
+ * the canvas can show it while the user is still dragging.
+ */
+export function linkRejection(
+  links: readonly WorkflowLink[],
+  source: string,
+  target: string,
+): "self" | "duplicate" | "cycle" | null {
+  if (source === target) {
+    return "self";
+  }
+
+  if (links.some((link) => link.source === source && link.target === target)) {
+    return "duplicate";
+  }
+
+  const visited = new Set<string>();
+  const queue = [target];
+
+  while (queue.length > 0) {
+    const current = queue.pop();
+
+    if (current === source) {
+      return "cycle";
+    }
+
+    if (current == null || visited.has(current)) {
+      continue;
+    }
+
+    visited.add(current);
+
+    for (const link of links) {
+      if (link.source === current) {
+        queue.push(link.target);
+      }
+    }
+  }
+
+  return null;
+}
