@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<afbbeb0155f4291eed67a71f242dbae8>>
+ * @generated SignedSource<<23c24822c98d3ec0b2206ab30db42844>>
  * @lightSyntaxTransform
  */
 
@@ -26,6 +26,7 @@ export type projectShellQuery$data = {
         readonly target: string;
       }>;
       readonly nodes: ReadonlyArray<{
+        readonly datasetId: string | null | undefined;
         readonly id: string;
         readonly kind: WorkflowNodeKind;
         readonly position: {
@@ -136,6 +137,13 @@ v2 = [
               {
                 "alias": null,
                 "args": null,
+                "kind": "ScalarField",
+                "name": "datasetId",
+                "storageKey": null
+              },
+              {
+                "alias": null,
+                "args": null,
                 "concreteType": "Position",
                 "kind": "LinkedField",
                 "name": "position",
@@ -212,16 +220,16 @@ return {
     "selections": (v2/*:: as any*/)
   },
   "params": {
-    "cacheID": "56079168d7955f762ca1fcc5c01a4d61",
+    "cacheID": "74b3e4f282b426a56f7686e04c90f580",
     "id": null,
     "metadata": {},
     "name": "projectShellQuery",
     "operationKind": "query",
-    "text": "query projectShellQuery(\n  $id: ID!\n) {\n  project(id: $id) {\n    id\n    name\n    question\n    phase\n    workflow {\n      nodes {\n        id\n        kind\n        title\n        subtitle\n        position {\n          x\n          y\n        }\n      }\n      links {\n        id\n        source\n        target\n      }\n    }\n  }\n}\n"
+    "text": "query projectShellQuery(\n  $id: ID!\n) {\n  project(id: $id) {\n    id\n    name\n    question\n    phase\n    workflow {\n      nodes {\n        id\n        kind\n        title\n        subtitle\n        datasetId\n        position {\n          x\n          y\n        }\n      }\n      links {\n        id\n        source\n        target\n      }\n    }\n  }\n}\n"
   }
 };
 })();
 
-(node as any).hash = "ff8fcfd56304311c5413ac58e0051bd4";
+(node as any).hash = "715577229aaecedc67f57ed3f9de6d8f";
 
 export default node;

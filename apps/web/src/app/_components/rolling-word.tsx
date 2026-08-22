@@ -4,8 +4,13 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { useInterval } from "react-simplikit";
 
-const ROTATE_INTERVAL = 2400;
+const ROTATE_INTERVAL = 3000;
 const EASE: [number, number, number, number] = [0.2, 0, 0, 1];
+const WORD_TRANSITION = {
+  y: { type: "spring", visualDuration: 0.62, bounce: 0.04 },
+  opacity: { duration: 0.34, ease: "easeOut" },
+  filter: { duration: 0.52, ease: "easeOut" },
+} as const;
 
 /**
  * Korean attaches 은 after a final consonant and 는 after a vowel, so the
@@ -65,23 +70,25 @@ export function RollingWord({ words }: RollingWordProps) {
 
   const word = words[index] ?? words[0];
   const width = widths[index];
-  const transition = reduceMotion ? { duration: 0 } : { duration: 0.55, ease: EASE };
+  const widthTransition = reduceMotion ? { duration: 0 } : { duration: 0.55, ease: EASE };
+  const wordTransition = reduceMotion ? { duration: 0 } : WORD_TRANSITION;
 
   return (
     <motion.span
       animate={width == null || width === 0 ? undefined : { width }}
       className="text-fg-brand relative inline-block overflow-hidden align-bottom"
       initial={false}
-      transition={transition}
+      transition={widthTransition}
     >
       <AnimatePresence initial={false} mode="popLayout">
         <motion.span
           animate={{ y: "0%", opacity: 1, filter: "blur(0px)" }}
           className="inline-block whitespace-nowrap"
-          exit={{ y: "-110%", opacity: 0, filter: "blur(12px)" }}
-          initial={{ y: "110%", opacity: 0, filter: "blur(12px)" }}
+          exit={{ y: "-110%", opacity: 0, filter: "blur(10px)" }}
+          initial={{ y: "110%", opacity: 0, filter: "blur(10px)" }}
           key={word}
-          transition={transition}
+          style={{ willChange: "transform, filter, opacity" }}
+          transition={wordTransition}
         >
           {word}
           {topicParticle(word)}

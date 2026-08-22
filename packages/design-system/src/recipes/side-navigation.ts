@@ -12,9 +12,7 @@ const collapsed = "group-data-[side-navigation-state=collapsed]/side-navigation"
 
 export const sideNavigationRootClassName = [
   "group/side-navigation relative flex h-full shrink-0 flex-col overflow-x-hidden",
-  "border-r border-stroke-neutral-subtle bg-bg-layer-default text-fg-neutral",
-  "w-side-navigation",
-  `${collapsed}:w-side-navigation-collapsed`,
+  "border-r border-stroke-neutral-subtle bg-bg-layer-side-navigation text-fg-neutral",
   "transition-[width]",
   collapseTransition,
 ].join(" ");

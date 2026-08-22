@@ -4,6 +4,7 @@ import {
   deriveProjectPhase,
   parseProject,
   touchProject,
+  ulid,
   type Project,
   type ProjectId,
   type Workflow,
@@ -146,6 +147,21 @@ export async function renameProject(id: ProjectId, name: string) {
 
 export async function saveWorkflow(id: ProjectId, workflow: Workflow) {
   return write(touchProject(await requireProject(id), { workflow }));
+}
+
+export async function deployProject(id: ProjectId) {
+  const project = await requireProject(id);
+  return write(touchProject(project, { deploymentId: project.deploymentId ?? ulid() }));
+}
+
+export async function findProjectByDeploymentId(deploymentId: string) {
+  const db = await database();
+  const row = await db
+    .prepare(`SELECT ${SELECT_COLUMNS} FROM projects WHERE deployment_id = ?`)
+    .bind(deploymentId)
+    .first<ProjectRow>();
+
+  return row == null ? null : toProject(row);
 }
 
 export async function removeProject(id: ProjectId) {

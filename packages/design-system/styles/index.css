@@ -2,3 +2,55 @@
 @import "./semantic.css";
 @import "./dark.css";
 @import "./theme.css";
+
+@layer components {
+  @keyframes moby-spinner-blade-fade {
+    0% { opacity: 1; }
+    100% { opacity: 0.15; }
+  }
+
+  .moby-spinner {
+    --moby-spinner-duration: 1s;
+  }
+
+  .moby-spinner[data-spinner-size="small"] .moby-spinner-blade {
+    left: 5.25px;
+    width: 1.5px;
+    height: 4px;
+    transform-origin: center -2px;
+  }
+
+  .moby-spinner[data-spinner-size="medium"] .moby-spinner-blade {
+    left: 7px;
+    width: 2px;
+    height: 5px;
+    transform-origin: center -3px;
+  }
+
+  .moby-spinner[data-spinner-size="large"] .moby-spinner-blade {
+    left: 9px;
+    width: 2px;
+    height: 6px;
+    transform-origin: center -4px;
+  }
+
+  .moby-spinner-blade {
+    position: absolute;
+    bottom: 0;
+    display: block;
+    background-color: currentColor;
+    animation: moby-spinner-blade-fade var(--moby-spinner-duration) linear infinite;
+  }
+
+  @keyframes moby-spinner-reduced-pulse {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 0.8; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .moby-spinner-blade {
+      animation: moby-spinner-reduced-pulse 2s ease-in-out infinite;
+      animation-delay: 0s !important;
+    }
+  }
+}

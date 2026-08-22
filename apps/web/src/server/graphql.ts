@@ -31,6 +31,7 @@ interface WorkflowNodeInput {
   kind: string;
   title: string;
   subtitle: string | null;
+  datasetId: string | null;
   position: { x: number; y: number };
 }
 
@@ -52,6 +53,7 @@ function toDomainWorkflow(input: {
     nodes: input.nodes.map((node) => ({
       ...node,
       kind: isGraphQLNodeKind(node.kind) ? NODE_KIND_FROM_GRAPHQL[node.kind] : node.kind,
+      datasetId: node.datasetId,
     })),
     links: input.links,
   });
@@ -73,6 +75,7 @@ function present(project: Project) {
       nodes: project.workflow.nodes.map((node) => ({
         ...node,
         kind: NODE_KIND_TO_GRAPHQL[node.kind],
+        datasetId: node.datasetId,
       })),
       links: project.workflow.links,
     },

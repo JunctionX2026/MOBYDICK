@@ -1,0 +1,2 @@
+apps/govdata/data/gbdata.duckdb filter=lfs diff=lfs merge=lfs -text
+apps/govdata/data/index/*.npy filter=lfs diff=lfs merge=lfs -text

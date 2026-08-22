@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<24fcb753d68ec6ede3ca2b865fd6ad65>>
+ * @generated SignedSource<<9058867137a3d712fa0c89faef1e7f6c>>
  * @lightSyntaxTransform
  */
 
@@ -16,6 +16,7 @@ export type SaveWorkflowInput = {
   nodes: ReadonlyArray<WorkflowNodeInput>;
 };
 export type WorkflowNodeInput = {
+  datasetId?: string | null | undefined;
   id: string;
   kind: WorkflowNodeKind;
   position: PositionInput;
@@ -46,6 +47,7 @@ export type workflowStoreSaveMutation$data = {
         readonly target: string;
       }>;
       readonly nodes: ReadonlyArray<{
+        readonly datasetId: string | null | undefined;
         readonly id: string;
         readonly kind: WorkflowNodeKind;
         readonly position: {
@@ -149,6 +151,13 @@ v2 = [
               {
                 "alias": null,
                 "args": null,
+                "kind": "ScalarField",
+                "name": "datasetId",
+                "storageKey": null
+              },
+              {
+                "alias": null,
+                "args": null,
                 "concreteType": "Position",
                 "kind": "LinkedField",
                 "name": "position",
@@ -225,16 +234,16 @@ return {
     "selections": (v2/*:: as any*/)
   },
   "params": {
-    "cacheID": "7340919169b55d96ec5d29ddee3606a0",
+    "cacheID": "3ca4cca30085f5b5c23fe57b78014d23",
     "id": null,
     "metadata": {},
     "name": "workflowStoreSaveMutation",
     "operationKind": "mutation",
-    "text": "mutation workflowStoreSaveMutation(\n  $input: SaveWorkflowInput!\n) {\n  saveWorkflow(input: $input) {\n    id\n    phase\n    updatedAt\n    workflow {\n      nodes {\n        id\n        kind\n        title\n        subtitle\n        position {\n          x\n          y\n        }\n      }\n      links {\n        id\n        source\n        target\n      }\n    }\n  }\n}\n"
+    "text": "mutation workflowStoreSaveMutation(\n  $input: SaveWorkflowInput!\n) {\n  saveWorkflow(input: $input) {\n    id\n    phase\n    updatedAt\n    workflow {\n      nodes {\n        id\n        kind\n        title\n        subtitle\n        datasetId\n        position {\n          x\n          y\n        }\n      }\n      links {\n        id\n        source\n        target\n      }\n    }\n  }\n}\n"
   }
 };
 })();
 
-(node as any).hash = "3edb17e4aa582fafc8f8ed87c203dd4f";
+(node as any).hash = "2a424841b0de9d883514d39a368b0552";
 
 export default node;

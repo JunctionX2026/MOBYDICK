@@ -20,6 +20,7 @@ export interface CanvasNode {
   kind: CanvasNodeKind;
   title: string;
   subtitle: string | null;
+  datasetId: string | null;
   position: CanvasPosition;
 }
 
@@ -37,7 +38,8 @@ export interface WorkflowStore {
   dirty: boolean;
   saving: boolean;
   error: string | null;
-  addNode: (kind: CanvasNodeKind) => string;
+  addNode: (kind: CanvasNodeKind, details?: { datasetId?: string | null; subtitle?: string | null; title?: string }) => string;
+  applyPipeline: (nodes: CanvasNode[], links: CanvasLink[]) => void;
   lastAddedId: string | null;
   moveNodes: (moves: ReadonlyArray<{ id: string; position: CanvasPosition }>) => void;
   remove: (nodeIds: ReadonlySet<string>, linkIds: ReadonlySet<string>) => void;
@@ -58,6 +60,7 @@ const SaveWorkflow = graphql`
           kind
           title
           subtitle
+          datasetId
           position {
             x
             y
@@ -87,6 +90,7 @@ export function toCanvasNodes(
     kind: string;
     title: string;
     subtitle: string | null | undefined;
+    datasetId: string | null | undefined;
     position: { x: number; y: number };
   }>,
 ): { droppedCount: number; nodes: CanvasNode[] } {
@@ -98,6 +102,7 @@ export function toCanvasNodes(
             kind: node.kind,
             title: node.title,
             subtitle: node.subtitle ?? null,
+            datasetId: node.datasetId ?? null,
             position: { x: node.position.x, y: node.position.y },
           },
         ]
@@ -153,17 +158,43 @@ export function WorkflowProvider({
       dirty,
       saving,
       error,
-      addNode: (kind) => {
+      addNode: (kind, details) => {
         const id = ulid();
 
         setNodes((previous) => [
           ...previous,
-          { id, kind, title: DEFAULT_TITLES[kind], subtitle: null, position: nextPosition(previous) },
+          {
+            id,
+            kind,
+            title: details?.title ?? DEFAULT_TITLES[kind],
+            subtitle: details?.subtitle ?? null,
+            datasetId: details?.datasetId ?? null,
+            position: nextPosition(previous),
+          },
         ]);
         setLastAddedId(id);
         setDirty(true);
 
         return id;
+      },
+      applyPipeline: (nextNodes, nextLinks) => {
+        setNodes(nextNodes);
+        setLinks(nextLinks);
+        setLastAddedId(null);
+        setError(null);
+        setDirty(true);
+        commit({
+          variables: { input: { id: projectId, nodes: nextNodes, links: nextLinks } },
+          onCompleted: (_response, errors) => {
+            if (errors != null && errors.length > 0) {
+              setError(errors[0]?.message ?? "생성한 파이프라인을 저장하지 못했어요.");
+              return;
+            }
+
+            setDirty(false);
+          },
+          onError: (reason) => setError(reason.message),
+        });
       },
       lastAddedId,
       moveNodes: (moves) => {

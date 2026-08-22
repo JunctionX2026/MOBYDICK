@@ -8,6 +8,7 @@ import {
   FocusIcon,
   SendIcon,
   TransformIcon,
+  TrashIcon,
   ZoomInIcon,
   ZoomOutIcon,
 } from "@mobydick/icon";
@@ -30,6 +31,7 @@ import {
   type CanvasPosition,
   type LinkRejection,
 } from "./workflow-store";
+import { DeleteDialog } from "./workflow-dialog";
 
 interface Viewport extends CanvasPosition {
   zoom: number;
@@ -38,6 +40,12 @@ interface Viewport extends CanvasPosition {
 interface Selection {
   nodes: ReadonlySet<string>;
   links: ReadonlySet<string>;
+}
+
+interface NodeContextMenu {
+  nodeId: string;
+  x: number;
+  y: number;
 }
 
 type Interaction =
@@ -113,6 +121,8 @@ export function Playground() {
   const [interaction, setInteraction] = useState<Interaction | null>(null);
   const [selection, setSelection] = useState<Selection>(EMPTY_SELECTION);
   const [panMode, setPanMode] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [contextMenu, setContextMenu] = useState<NodeContextMenu | null>(null);
 
   const toCanvas = (clientX: number, clientY: number): CanvasPosition => {
     const rect = surface.current?.getBoundingClientRect();
@@ -209,6 +219,18 @@ export function Playground() {
   }, [lastAddedId]);
 
   useEffect(() => {
+    if (contextMenu == null) {
+      return;
+    }
+
+    const closeContextMenu = () => setContextMenu(null);
+
+    window.addEventListener("pointerdown", closeContextMenu);
+
+    return () => window.removeEventListener("pointerdown", closeContextMenu);
+  }, [contextMenu]);
+
+  useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (isTypingTarget(event.target)) {
         return;
@@ -222,13 +244,17 @@ export function Playground() {
       if (event.key === "Escape") {
         setSelection(EMPTY_SELECTION);
         setInteraction(null);
+        setContextMenu(null);
         return;
       }
 
       if (event.key === "Delete" || event.key === "Backspace") {
+        if (selection.nodes.size + selection.links.size === 0) {
+          return;
+        }
+
         event.preventDefault();
-        remove(selection.nodes, selection.links);
-        setSelection(EMPTY_SELECTION);
+        setDeleteDialogOpen(true);
         return;
       }
 
@@ -511,7 +537,7 @@ export function Playground() {
                     }}
                     strokeWidth={16}
                   >
-                    <title>연결을 고르고 Delete를 눌러 지워요</title>
+                    <title>연결 선택</title>
                   </path>
                 </g>
               );
@@ -580,6 +606,12 @@ export function Playground() {
                 onPointerMove={handlePointerMove}
                 onPointerUp={finishInteraction}
                 onPointerCancel={finishInteraction}
+                onContextMenu={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  setSelection({ nodes: new Set([node.id]), links: new Set() });
+                  setContextMenu({ nodeId: node.id, x: event.clientX, y: event.clientY });
+                }}
                 style={{
                   cursor: interaction?.type === "drag" ? "grabbing" : "grab",
                   height: NODE_HEIGHT,
@@ -645,6 +677,7 @@ export function Playground() {
             </p>
             <Button
               className="pointer-events-auto"
+              onPointerDown={(event) => event.stopPropagation()}
               onClick={() => addNode("SOURCE")}
               size="small"
               variant="outline"
@@ -661,7 +694,10 @@ export function Playground() {
           </div>
         )}
 
-        <div className="border-stroke-neutral-subtle bg-bg-layer-floating rounded-pill shadow-elevation-raised absolute bottom-4 left-4 flex items-center gap-1 border p-1">
+        <div
+          className="border-stroke-neutral-subtle bg-bg-layer-floating rounded-pill shadow-elevation-raised absolute bottom-4 left-4 flex items-center gap-1 border p-1"
+          onPointerDown={(event) => event.stopPropagation()}
+        >
           <Button
             aria-label="축소"
             iconOnly
@@ -698,15 +734,15 @@ export function Playground() {
         </div>
 
         {selection.nodes.size + selection.links.size > 0 && (
-          <div className="border-stroke-neutral-subtle bg-bg-layer-floating rounded-pill shadow-elevation-raised text-fg-neutral-muted absolute right-4 bottom-4 flex items-center gap-2 border py-1 pr-1 pl-3 text-xs">
+          <div
+            className="border-stroke-neutral-subtle bg-bg-layer-floating rounded-pill shadow-elevation-raised text-fg-neutral-muted absolute right-4 bottom-4 flex items-center gap-2 border py-1 pr-1 pl-3 text-xs"
+            onPointerDown={(event) => event.stopPropagation()}
+          >
             <span>
               노드 {selection.nodes.size} · 연결 {selection.links.size}
             </span>
             <Button
-              onClick={() => {
-                remove(selection.nodes, selection.links);
-                setSelection(EMPTY_SELECTION);
-              }}
+              onClick={() => setDeleteDialogOpen(true)}
               shape="pill"
               size="small"
               variant="criticalSolid"
@@ -716,6 +752,31 @@ export function Playground() {
           </div>
         )}
       </div>
+
+      {contextMenu != null && (
+        <div
+          aria-label={`노드 ${contextMenu.nodeId} 메뉴`}
+          className="border-stroke-neutral-subtle bg-bg-layer-floating rounded-surface shadow-elevation-floating fixed z-40 min-w-36 border p-1"
+          data-context-menu-node={contextMenu.nodeId}
+          onContextMenu={(event) => event.preventDefault()}
+          onPointerDown={(event) => event.stopPropagation()}
+          role="menu"
+          style={{ left: contextMenu.x, top: contextMenu.y }}
+        >
+          <Button
+            className="w-full justify-start"
+            onClick={() => {
+              setContextMenu(null);
+              setDeleteDialogOpen(true);
+            }}
+            size="small"
+            variant="ghost"
+          >
+            <TrashIcon />
+            노드 삭제
+          </Button>
+        </div>
+      )}
 
       {error != null && (
         <div className="absolute right-4 bottom-16 max-w-sm">
@@ -730,6 +791,17 @@ export function Playground() {
           </Callout>
         </div>
       )}
+
+      <DeleteDialog
+        linkCount={selection.links.size}
+        nodeCount={selection.nodes.size}
+        onConfirm={() => {
+          remove(selection.nodes, selection.links);
+          setSelection(EMPTY_SELECTION);
+        }}
+        onOpenChange={setDeleteDialogOpen}
+        open={deleteDialogOpen}
+      />
     </div>
   );
 }

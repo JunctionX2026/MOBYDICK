@@ -1,16 +1,15 @@
 "use client";
 
-import { Badge, Button, Callout, Card, Skeleton, Textarea } from "@mobydick/design-system";
+import { Badge, Button, Callout, Card, Skeleton } from "@mobydick/design-system";
 import { ArrowRightIcon, SparklesFilledIcon, TrashIcon } from "@mobydick/icon";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { graphql, useLazyLoadQuery, useMutation } from "react-relay";
 import { match } from "ts-pattern";
-import type { projectPickerCreateMutation } from "@/__generated__/relay/projectPickerCreateMutation.graphql";
 import type { projectPickerDeleteMutation } from "@/__generated__/relay/projectPickerDeleteMutation.graphql";
 import type { projectPickerQuery } from "@/__generated__/relay/projectPickerQuery.graphql";
 import { ClientQuery } from "@/relay/client-query";
+import { NewProjectDialog } from "./new-project-dialog";
 
 const ProjectsQuery = graphql`
   query projectPickerQuery {
@@ -23,18 +22,6 @@ const ProjectsQuery = graphql`
         phase
         updatedAt
       }
-    }
-  }
-`;
-
-const CreateProject = graphql`
-  mutation projectPickerCreateMutation($input: CreateProjectInput!) {
-    createProject(input: $input) {
-      id
-      name
-      question
-      phase
-      updatedAt
     }
   }
 `;
@@ -70,67 +57,7 @@ function relativeTime(iso: string) {
   return Math.abs(hours) < 24 ? RELATIVE.format(hours, "hour") : RELATIVE.format(Math.round(hours / 24), "day");
 }
 
-function ProjectCreateForm() {
-  const router = useRouter();
-  const [question, setQuestion] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [create, creating] = useMutation<projectPickerCreateMutation>(CreateProject);
-
-  const trimmed = question.trim();
-
-  return (
-    <form
-      className="flex flex-col gap-3"
-      onSubmit={(event) => {
-        event.preventDefault();
-
-        if (trimmed === "" || creating) {
-          return;
-        }
-
-        setError(null);
-        create({
-          variables: { input: { question: trimmed, name: null } },
-          onCompleted: (response, errors) => {
-            if (errors != null && errors.length > 0) {
-              setError(errors[0]?.message ?? "프로젝트를 만들지 못했어요.");
-              return;
-            }
-
-            router.push(`/projects/${response.createProject.id}`);
-          },
-          onError: (reason) => setError(reason.message),
-        });
-      }}
-    >
-      <Textarea
-        aria-label="질문"
-        className="min-h-28 text-base"
-        name="question"
-        onChange={(event) => setQuestion(event.target.value)}
-        placeholder="경북에서 생활폐기물이 인구 대비 많은 시군이 어디야?"
-        value={question}
-      />
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-fg-neutral-subtle text-xs">질문 하나가 프로젝트 하나예요.</p>
-        <Button disabled={trimmed === "" || creating} size="large" type="submit">
-          <SparklesFilledIcon />
-          {creating ? "만드는 중" : "작업실 열기"}
-        </Button>
-      </div>
-      {error != null && (
-        <Callout tone="critical">
-          <Callout.Content>
-            <Callout.Title>프로젝트를 만들지 못했어요</Callout.Title>
-            <Callout.Description>{error}</Callout.Description>
-          </Callout.Content>
-        </Callout>
-      )}
-    </form>
-  );
-}
-
-function ProjectGrid() {
+function ProjectList() {
   const data = useLazyLoadQuery<projectPickerQuery>(ProjectsQuery, {}, { fetchPolicy: "store-and-network" });
   const [remove, removing] = useMutation<projectPickerDeleteMutation>(DeleteProject);
   const { droppedCount, projects } = data.projectList;
@@ -153,63 +80,59 @@ function ProjectGrid() {
           <Card.Header>
             <Card.Title>아직 프로젝트가 없어요</Card.Title>
             <Card.Description>
-              위에 질문을 하나 쓰면 그 질문을 담은 작업실이 열려요.
+              새 프로젝트를 눌러 첫 작업실을 만들어보세요.
             </Card.Description>
           </Card.Header>
         </Card>
       ) : (
-        <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="overflow-hidden rounded-surface border border-stroke-neutral-subtle bg-bg-layer-default">
           {projects.map((project) => {
             const phase = phaseLabel(project.phase);
 
             return (
-              <li key={project.id}>
-                <Card className="group/card hover:border-stroke-neutral-muted h-full transition-colors">
-                  <Card.Header>
-                    <div className="flex items-start justify-between gap-2">
-                      <Card.Title className="text-base">{project.name}</Card.Title>
+              <li className="border-b border-stroke-neutral-subtle last:border-b-0" key={project.id}>
+                <div className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h2 className="truncate text-base font-semibold text-fg-neutral-default">{project.name}</h2>
                       <Badge emphasis="weak" size="small" tone={phase.tone}>
                         {phase.label}
                       </Badge>
                     </div>
-                    <Card.Description className="line-clamp-2">{project.question}</Card.Description>
-                  </Card.Header>
-                  <Card.Body className="flex items-center justify-between gap-2">
-                    <span className="text-fg-neutral-subtle text-xs">
-                      {relativeTime(project.updatedAt)}
-                    </span>
-                    <div className="flex items-center gap-1">
-                      <Button
-                        aria-label={`${project.name} 삭제`}
-                        disabled={removing}
-                        iconOnly
-                        onClick={() =>
-                          remove({
-                            variables: { id: project.id },
-                            updater: (store) => {
-                              const list = store.getRoot().getLinkedRecord("projectList");
-                              const remaining = (list?.getLinkedRecords("projects") ?? []).filter(
-                                (record) => record?.getDataID() !== project.id,
-                              );
+                    <p className="mt-1 line-clamp-2 text-sm text-fg-neutral-subtle">{project.question}</p>
+                    <span className="mt-2 block text-xs text-fg-neutral-subtle">{relativeTime(project.updatedAt)}</span>
+                  </div>
+                  <div className="flex shrink-0 items-center justify-end gap-1">
+                    <Button
+                      aria-label={`${project.name} 삭제`}
+                      disabled={removing}
+                      iconOnly
+                      onClick={() =>
+                        remove({
+                          variables: { id: project.id },
+                          updater: (store) => {
+                            const list = store.getRoot().getLinkedRecord("projectList");
+                            const remaining = (list?.getLinkedRecords("projects") ?? []).filter(
+                              (record) => record?.getDataID() !== project.id,
+                            );
 
-                              list?.setLinkedRecords(remaining, "projects");
-                            },
-                          })
-                        }
-                        size="small"
-                        variant="ghost"
-                      >
-                        <TrashIcon />
-                      </Button>
-                      <Button asChild size="small" variant="outline">
-                        <Link href={`/projects/${project.id}`}>
-                          열기
-                          <ArrowRightIcon />
-                        </Link>
-                      </Button>
-                    </div>
-                  </Card.Body>
-                </Card>
+                            list?.setLinkedRecords(remaining, "projects");
+                          },
+                        })
+                      }
+                      size="small"
+                      variant="ghost"
+                    >
+                      <TrashIcon />
+                    </Button>
+                    <Button asChild size="small" variant="outline">
+                      <Link href={`/projects/${project.id}`}>
+                        열기
+                        <ArrowRightIcon />
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
               </li>
             );
           })}
@@ -219,12 +142,35 @@ function ProjectGrid() {
   );
 }
 
-function ProjectGridSkeleton() {
+function ProjectRowSkeleton() {
   return (
-    <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+    <div aria-hidden="true" className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+      <div className="min-w-0 flex-1 space-y-2">
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-5 w-32" />
+          <Skeleton className="h-5 w-12" radius="full" />
+        </div>
+        <Skeleton className="h-3 w-4/5" />
+        <Skeleton className="h-3 w-14" />
+      </div>
+      <div className="flex items-center justify-end gap-1">
+        <Skeleton className="size-8" radius="control" />
+        <Skeleton className="h-8 w-14" radius="control" />
+      </div>
+    </div>
+  );
+}
+
+function ProjectListSkeleton() {
+  return (
+    <ul
+      aria-busy="true"
+      aria-label="프로젝트를 불러오는 중"
+      className="overflow-hidden rounded-surface border border-stroke-neutral-subtle bg-bg-layer-default"
+    >
       {[0, 1, 2].map((key) => (
-        <li key={key}>
-          <Skeleton className="h-36 w-full" radius="surface" />
+        <li className="border-b border-stroke-neutral-subtle last:border-b-0" key={key}>
+          <ProjectRowSkeleton />
         </li>
       ))}
     </ul>
@@ -232,15 +178,28 @@ function ProjectGridSkeleton() {
 }
 
 export function ProjectPicker() {
+  const [dialogOpen, setDialogOpen] = useState(false);
+
   return (
-    <div className="flex flex-col gap-10">
-      <ProjectCreateForm />
-      <section className="flex flex-col gap-4">
-        <h2 className="text-fg-neutral text-lg font-semibold">이어서 열기</h2>
-        <ClientQuery fallback={<ProjectGridSkeleton />}>
-          <ProjectGrid />
-        </ClientQuery>
-      </section>
+    <div className="flex flex-col gap-4">
+      <div className="flex justify-end">
+        <Button
+          aria-controls="new-project-dialog"
+          aria-haspopup="dialog"
+          onClick={() => setDialogOpen(true)}
+          size="medium"
+          type="button"
+        >
+          <SparklesFilledIcon />
+          새 프로젝트
+        </Button>
+      </div>
+
+      <NewProjectDialog onOpenChange={setDialogOpen} open={dialogOpen} />
+
+      <ClientQuery fallback={<ProjectListSkeleton />}>
+        <ProjectList />
+      </ClientQuery>
     </div>
   );
 }

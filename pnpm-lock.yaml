@@ -8,6 +8,8 @@ importers:
 
   .: {}
 
+  apps/govdata: {}
+
   apps/web:
     dependencies:
       '@mobydick/design-system':

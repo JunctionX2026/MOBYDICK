@@ -31,6 +31,7 @@ type WorkflowNode {
   kind: WorkflowNodeKind!
   title: String!
   subtitle: String
+  datasetId: ID
   position: Position!
 }
 
@@ -86,6 +87,7 @@ input WorkflowNodeInput {
   kind: WorkflowNodeKind!
   title: String!
   subtitle: String
+  datasetId: ID
   position: PositionInput!
 }
 

@@ -9,6 +9,7 @@ const node = (id: string): WorkflowNode => ({
   kind: "source",
   title: "생활폐기물 배출량",
   subtitle: null,
+  datasetId: null,
   position: { x: 0, y: 0 },
 });
 

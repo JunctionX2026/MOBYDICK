@@ -3,6 +3,8 @@
     --moby-color-bg-layer-default: var(--moby-color-palette-gray-1000);
     --moby-color-bg-layer-basement: oklch(11% 0.008 260);
     --moby-color-bg-layer-floating: var(--moby-color-palette-gray-900);
+    --moby-color-bg-layer-modal: var(--moby-color-palette-gray-950);
+    --moby-color-bg-layer-side-navigation: var(--moby-color-palette-gray-1000);
 
     --moby-color-bg-neutral-solid: var(--moby-color-palette-gray-300);
     --moby-color-bg-neutral-solid-pressed: var(--moby-color-palette-gray-400);

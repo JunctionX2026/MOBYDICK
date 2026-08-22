@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GovData Studio</title>
+<style>
+  :root { --bg:#0f1115; --panel:#171a21; --line:#262b36; --text:#e8eaf0; --muted:#8b93a7; --accent:#5b9cff; --ok:#3ecf8e; --warn:#ffb454; --bad:#ff6b6b; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:14px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Apple SD Gothic Neo","Noto Sans KR",sans-serif; }
+  header { padding:28px 32px 12px; border-bottom:1px solid var(--line); }
+  h1 { margin:0; font-size:22px; letter-spacing:-.2px; }
+  h1 span { color:var(--accent); }
+  .tag { color:var(--muted); margin-top:4px; }
+  .stats { display:flex; gap:18px; margin-top:10px; color:var(--muted); font-size:12px; }
+  .stats b { color:var(--text); font-size:15px; margin-right:4px; }
+  main { display:grid; grid-template-columns: 420px 1fr; gap:0; min-height:calc(100vh - 120px); }
+  .left { border-right:1px solid var(--line); padding:18px; overflow:auto; }
+  .right { padding:18px 24px; overflow:auto; }
+  .search { display:flex; gap:8px; }
+  input[type=text] { flex:1; background:var(--panel); border:1px solid var(--line); color:var(--text); padding:10px 12px; border-radius:8px; font-size:14px; }
+  button { background:var(--accent); color:#fff; border:0; padding:10px 14px; border-radius:8px; cursor:pointer; font-weight:600; }
+  button.ghost { background:transparent; border:1px solid var(--line); color:var(--text); font-weight:500; }
+  button.small { padding:5px 9px; font-size:12px; }
+  .examples { margin:10px 0 14px; display:flex; flex-wrap:wrap; gap:6px; }
+  .examples a { font-size:12px; color:var(--muted); border:1px solid var(--line); padding:3px 8px; border-radius:999px; cursor:pointer; }
+  .examples a:hover { color:var(--text); border-color:var(--accent); }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:12px; margin-bottom:10px; }
+  .card h3 { margin:0 0 4px; font-size:14px; }
+  .meta { color:var(--muted); font-size:12px; }
+  .pill { display:inline-block; font-size:11px; padding:1px 7px; border-radius:999px; border:1px solid var(--line); color:var(--muted); margin-right:4px; }
+  .pill.ok { color:var(--ok); border-color:var(--ok); }
+  .pill.warn { color:var(--warn); border-color:var(--warn); }
+  .nb { margin-top:8px; padding-top:8px; border-top:1px dashed var(--line); font-size:12px; }
+  .nb div { display:flex; justify-content:space-between; gap:8px; padding:2px 0; }
+  .nb .rate { color:var(--ok); white-space:nowrap; }
+  .set { border-left:3px solid var(--accent); }
+  .set .members { margin:6px 0; }
+  .set .members div { padding:2px 0; }
+  section h2 { font-size:15px; margin:0 0 10px; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; }
+  textarea { width:100%; min-height:180px; background:var(--panel); border:1px solid var(--line); color:var(--text); font:12px/1.45 ui-monospace,Menlo,Consolas,monospace; padding:10px; border-radius:8px; }
+  pre { background:var(--panel); border:1px solid var(--line); padding:10px; border-radius:8px; overflow:auto; font-size:12px; white-space:pre-wrap; }
+  table { border-collapse:collapse; width:100%; font-size:13px; }
+  th, td { border-bottom:1px solid var(--line); padding:6px 8px; text-align:left; white-space:nowrap; }
+  th { color:var(--muted); font-weight:600; position:sticky; top:0; background:var(--bg); }
+  td.num { text-align:right; font-variant-numeric:tabular-nums; }
+  .tablewrap { max-height:420px; overflow:auto; border:1px solid var(--line); border-radius:8px; }
+  .drop { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:10px; }
+  .drop .card { margin:0; }
+  .bar { height:6px; background:var(--line); border-radius:3px; overflow:hidden; margin:6px 0; }
+  .bar i { display:block; height:100%; background:var(--ok); }
+  .row { display:flex; gap:8px; align-items:center; margin:8px 0; }
+  .muted { color:var(--muted); }
+  .err { color:var(--bad); }
+  #chart { width:100%; height:260px; margin-top:10px; }
+  .empty { color:var(--muted); padding:40px; text-align:center; }
+  a.link { color:var(--accent); text-decoration:none; }
+  dialog { background:var(--panel); color:var(--text); border:1px solid var(--line); border-radius:12px; max-width:900px; width:90vw; }
+  dialog::backdrop { background:rgba(0,0,0,.6); }
+</style>
+</head>
+<body>
+<header>
+  <h1>GovData <span>Studio</span></h1>
+  <div class="tag">Find, combine, and run Korean public data — column by column. <span class="muted">Gyeongbuk edition · joins are measured, not guessed.</span></div>
+  <div class="stats" id="stats"></div>
+</header>
+<main>
+  <div class="left">
+    <div class="search">
+      <input id="q" type="text" placeholder="e.g. elderly welfare facilities vs hospitals by city" />
+      <button id="go">Find</button>
+    </div>
+    <div class="examples" id="examples"></div>
+    <div id="results"><div class="empty">Ask a question. Results show real datasets and which ones actually join.</div></div>
+  </div>
+  <div class="right">
+    <section>
+      <h2>Operation</h2>
+      <div class="muted" style="margin-bottom:6px">The LLM only plans. DuckDB computes. Edit the spec and run.</div>
+      <textarea id="spec" spellcheck="false"></textarea>
+      <div class="row">
+        <button id="run">Run on DuckDB</button>
+        <button id="plan" class="ghost">Plan with Claude</button>
+        <span id="status" class="muted"></span>
+      </div>
+    </section>
+    <section id="out"></section>
+  </div>
+</main>
+
+<dialog id="wiki"><div id="wikibody"></div><div class="row" style="justify-content:flex-end"><button class="ghost" onclick="document.getElementById('wiki').close()">Close</button></div></dialog>
+
+<script>
+const $ = s => document.querySelector(s);
+const EXAMPLES = [
+  "elderly welfare facilities vs hospitals by city",
+  "child protection zones and CCTV coverage",
+  "public toilets, social enterprises and village companies by city",
+  "Gumi: senior centers, child zones, restaurants by town",
+  "Pohang: living population vs shelter capacity by town",
+  "Yeongju solar permits vs public buildings by town",
+  "food prices by city (rice, pork, cabbage)",
+  "Yeongcheon sports facilities, farm stays, good-price shops",
+];
+const fmt = n => typeof n === "number" ? n.toLocaleString("en-US", {maximumFractionDigits: 2}) : (n ?? "");
+let lastRecommend = null;
+
+async function api(path, body) {
+  const r = await fetch(path, body ? {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(body)} : undefined);
+  const j = await r.json();
+  if (!r.ok) throw new Error(j.detail || r.statusText);
+  return j;
+}
+
+async function loadStats() {
+  const s = await api("/api/stats");
+  $("#stats").innerHTML = `<div><b>${fmt(s.datasets)}</b>datasets</div><div><b>${fmt(s.columns)}</b>columns</div>
+    <div><b>${fmt(s.rows)}</b>rows in DuckDB</div><div><b>${fmt(s.joinable_pairs)}</b>verified joinable pairs</div>
+    <div><b>${s.with_region_key}</b>with region keys</div><div>${s.llm_planning ? "LLM planning: on" : "LLM planning: off (no API key)"}</div>`;
+  $("#plan").disabled = !s.llm_planning;
+}
+
+function card(d) {
+  const rk = d.region_keys || {};
+  const keys = ["sgg","emd"].filter(l => rk[l]).map(l => `<span class="pill ok">${l}: ${rk[l]}</span>`).join("") || `<span class="pill warn">no region key</span>`;
+  const nbs = (d.neighbors || []).map(n => `<div><span>↔ ${n.title} <span class="muted">[${n.level}]</span></span><span class="rate">${Math.round(n.match_rate*100)}% · ${n.matched} keys</span></div>`).join("");
+  return `<div class="card">
+    <h3><a class="link" href="#" onclick="openWiki('${d.dataset_id}');return false">${d.title}</a> <span class="muted">${d.op || ""}</span></h3>
+    <div class="meta">${d.confidence === "low" ? '<span class="pill warn">weak</span>' : ""}${d.provider} · ${d.category} · ${fmt(d.rows)} rows · ${d.n_columns} cols${d.matched_column ? ` · matched column <b>${d.matched_column}</b>` : ""}</div>
+    <div style="margin-top:6px">${keys}<span class="pill">${d.joinable_count} joinable</span></div>
+    ${nbs ? `<div class="nb">${nbs}</div>` : ""}
+  </div>`;
+}
+
+function setCard(s, i) {
+  const members = s.titles.map((t, j) => `<div>${j+1}. ${t}</div>`).join("");
+  const links = s.links.map(l => `<div><span class="muted">${l.a_col} = ${l.b_col}</span><span class="rate">${Math.round(l.match_rate*100)}% (${l.matched})</span></div>`).join("");
+  return `<div class="card set">
+    <h3>Joinable set · ${s.level_label}</h3>
+    <div class="members">${members}</div>
+    <div class="nb">${links}</div>
+    <div class="row"><button class="small" onclick="useSet(${i})">Use this set</button><span class="muted">min match ${Math.round(s.min_match_rate*100)}%</span></div>
+  </div>`;
+}
+
+async function recommend() {
+  const q = $("#q").value.trim(); if (!q) return;
+  $("#results").innerHTML = `<div class="empty">Searching…</div>`;
+  try {
+    const r = await api("/api/recommend", {query: q, k: 6});
+    lastRecommend = r;
+    let html = "";
+    if (r.weak_match) html += `<div class="card" style="border-color:var(--warn)"><b style="color:var(--warn)">Weak match.</b> <span class="muted">No dataset in the catalog fits this question well — the results below are the closest by metadata similarity.</span></div>`;
+    if (r.parts && r.parts.length) html += `<div class="meta" style="margin-bottom:8px">Understood as ${r.parts.length} parts: ${r.parts.map(p => `<span class="pill">${p}</span>`).join(" ")}</div>`;
+    if (r.joinable_sets.length) html += `<section><h2>${r.mode === "join" ? "Verified joinable sets" : "Could also be joined with"}</h2>${r.joinable_sets.map(setCard).join("")}</section>`;
+    html += `<section><h2>Datasets</h2>${r.datasets.map(card).join("")}</section>`;
+    $("#results").innerHTML = html;
+    if (r.mode === "join") useSet(0); else if (r.single_spec) { $("#spec").value = JSON.stringify(r.single_spec, null, 2); $("#status").textContent = "Single-dataset spec loaded"; }
+    run();
+  } catch (e) { $("#results").innerHTML = `<div class="err">${e.message}</div>`; }
+}
+
+function useSet(i) {
+  const s = lastRecommend.joinable_sets[i];
+  $("#spec").value = JSON.stringify(s.spec, null, 2);
+  $("#status").textContent = `Spec loaded: ${s.members.length} datasets joined on ${s.level}`;
+}
+
+function renderResult(res, title) {
+  const cols = res.columns;
+  const rows = res.rows;
+  const isNum = cols.map((c, i) => rows.length && rows.every(r => r[i] === null || typeof r[i] === "number"));
+  const thead = `<tr>${cols.map(c => `<th>${c}</th>`).join("")}</tr>`;
+  const tbody = rows.map(r => `<tr>${r.map((v, i) => `<td class="${isNum[i] ? "num" : ""}">${isNum[i] ? fmt(v) : (v ?? "")}</td>`).join("")}</tr>`).join("");
+  const drops = (res.dropped_detail || []).map(d => `<div class="card">
+      <h3>${d.title}</h3>
+      <div class="meta">${d.keys} keys · ${d.matched} matched · ${d.dropped} dropped</div>
+      <div class="bar"><i style="width:${Math.round(d.match_rate*100)}%"></i></div>
+      <div class="meta">${Math.round(d.match_rate*100)}% match${d.dropped_keys.length ? ` · dropped: ${d.dropped_keys.slice(0,8).join(", ")}${d.dropped_keys.length > 8 ? " …" : ""}` : ""}</div>
+    </div>`).join("");
+  $("#out").innerHTML = `
+    <h2>Result · ${res.row_count} rows${title ? " · " + title : ""}</h2>
+    <svg id="chart"></svg>
+    <div class="tablewrap"><table><thead>${thead}</thead><tbody>${tbody}</tbody></table></div>
+    ${drops ? `<h2 style="margin-top:16px">What was dropped (and why)</h2><div class="drop">${drops}</div>` : ""}
+    <h2 style="margin-top:16px">Compiled SQL</h2><pre>${res.sql.replace(/</g,"&lt;")}</pre>`;
+  drawChart(cols, rows, isNum);
+}
+
+function drawChart(cols, rows, isNum) {
+  const svg = $("#chart"); if (!svg) return;
+  const labelIdx = cols.findIndex((c, i) => !isNum[i]);
+  const numIdx = cols.map((c, i) => i).filter(i => isNum[i] && i !== labelIdx).slice(0, 3);
+  if (labelIdx < 0 || !numIdx.length || rows.length < 2) { svg.style.display = "none"; return; }
+  svg.style.display = "block";
+  const data = rows.slice(0, 24);
+  const W = svg.clientWidth || 800, H = 260, padL = 40, padB = 60, padT = 10;
+  const colors = ["#5b9cff", "#3ecf8e", "#ffb454"];
+  const max = Math.max(...data.flatMap(r => numIdx.map(i => r[i] || 0)), 1);
+  const gw = (W - padL) / data.length, bw = Math.max(2, (gw - 6) / numIdx.length);
+  let s = "";
+  data.forEach((r, k) => {
+    numIdx.forEach((i, j) => {
+      const h = (r[i] || 0) / max * (H - padB - padT);
+      s += `<rect x="${padL + k*gw + 3 + j*bw}" y="${H - padB - h}" width="${bw}" height="${h}" fill="${colors[j]}" rx="2"><title>${cols[i]}: ${fmt(r[i])}</title></rect>`;
+    });
+    s += `<text x="${padL + k*gw + gw/2}" y="${H - padB + 12}" font-size="10" fill="#8b93a7" text-anchor="end" transform="rotate(-40 ${padL + k*gw + gw/2} ${H - padB + 12})">${String(r[labelIdx]).replace(/^.*\|/, "")}</text>`;
+  });
+  numIdx.forEach((i, j) => { s += `<rect x="${padL + j*120}" y="${H-12}" width="10" height="10" fill="${colors[j]}"/><text x="${padL + j*120 + 14}" y="${H-3}" font-size="11" fill="#e8eaf0">${cols[i]}</text>`; });
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  svg.innerHTML = s;
+}
+
+async function run() {
+  let spec; try { spec = JSON.parse($("#spec").value); } catch (e) { $("#status").textContent = "Spec is not valid JSON"; return; }
+  $("#status").textContent = "Running…";
+  try { const res = await api("/api/run", {spec}); $("#status").textContent = `Done · ${res.row_count} rows`; renderResult(res); }
+  catch (e) { $("#status").innerHTML = `<span class="err">${e.message}</span>`; }
+}
+
+async function plan() {
+  const q = $("#q").value.trim(); if (!q) return;
+  $("#status").textContent = "Planning with Claude…";
+  try {
+    const p = await api("/api/plan", {query: q});
+    $("#spec").value = JSON.stringify(p.spec, null, 2);
+    $("#status").textContent = p.explanation || "Planned";
+    if (p.result) renderResult(p.result, p.title); else if (p.error) $("#status").innerHTML = `<span class="err">${p.error}</span>`;
+  } catch (e) { $("#status").innerHTML = `<span class="err">${e.message}</span>`; }
+}
+
+async function openWiki(id) {
+  const d = await api(`/api/dataset/${id}`);
+  const cols = d.columns.map(c => `<tr><td>${c.name}</td><td>${c.desc_ko || ""}</td><td><span class="pill">${c.role}</span></td><td class="muted">${(c.samples||[]).slice(0,2).join(" · ")}</td><td class="num">${Math.round((1-c.null_rate)*100)}%</td></tr>`).join("");
+  const nbs = d.neighbors.map(n => `<div><span>${n.title} <span class="muted">[${n.level}] ${n.my_col} = ${n.other_col}</span></span><span class="rate">${Math.round(n.match_rate*100)}%</span></div>`).join("");
+  $("#wikibody").innerHTML = `<h2 style="margin-top:0">${d.title} <span class="muted">${d.op||""}</span></h2>
+    <div class="meta">${d.provider} · ${d.category} · ${fmt(d.rows)} rows · ${d.update_cycle || ""} · <a class="link" href="${d.reference}" target="_blank">data.go.kr</a> · <a class="link" href="${d.api_url}" target="_blank">API</a></div>
+    <p class="muted">${(d.description || "").slice(0, 500)}</p>
+    <div class="tablewrap" style="max-height:300px"><table><thead><tr><th>column</th><th>meaning</th><th>role</th><th>samples</th><th>filled</th></tr></thead><tbody>${cols}</tbody></table></div>
+    <h3>Joins measured with other datasets</h3><div class="nb">${nbs || "<span class='muted'>none ≥ 30%</span>"}</div>`;
+  $("#wiki").showModal();
+}
+
+$("#go").onclick = recommend;
+$("#q").addEventListener("keydown", e => { if (e.key === "Enter") recommend(); });
+$("#run").onclick = run;
+$("#plan").onclick = plan;
+$("#examples").innerHTML = EXAMPLES.map(e => `<a onclick="document.getElementById('q').value=this.textContent;recommend()">${e}</a>`).join("");
+loadStats();
+</script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+{
+  "name": "@mobydick/govdata",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "if [ -x .venv/bin/uvicorn ]; then .venv/bin/uvicorn app.server:app --host 0.0.0.0 --port 8000; else echo 'Create apps/govdata/.venv before starting GovData.' >&2; exit 1; fi",
+    "build": "python3 -m compileall -q app scripts",
+    "lint": "python3 -m compileall -q app scripts",
+    "typecheck": "python3 -m compileall -q app scripts",
+    "test": "python3 -m compileall -q app scripts"
+  }
+}

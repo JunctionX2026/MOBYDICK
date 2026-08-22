@@ -12,6 +12,7 @@ export interface WorkflowNode {
   kind: WorkflowNodeKind;
   title: string;
   subtitle: string | null;
+  datasetId: string | null;
   position: WorkflowNodePosition;
 }
 
@@ -57,7 +58,7 @@ function parseNode(value: unknown): WorkflowNode | null {
     return null;
   }
 
-  const { id, kind, position, subtitle, title } = value;
+  const { datasetId, id, kind, position, subtitle, title } = value;
 
   if (!isNonEmptyString(id) || !isNodeKind(kind) || !isNonEmptyString(title)) {
     return null;
@@ -67,13 +68,24 @@ function parseNode(value: unknown): WorkflowNode | null {
     return null;
   }
 
+  if (datasetId != null && !isNonEmptyString(datasetId)) {
+    return null;
+  }
+
   const parsedPosition = parsePosition(position);
 
   if (parsedPosition == null) {
     return null;
   }
 
-  return { id, kind, title, subtitle: subtitle ?? null, position: parsedPosition };
+  return {
+    id,
+    kind,
+    title,
+    subtitle: subtitle ?? null,
+    datasetId: datasetId ?? null,
+    position: parsedPosition,
+  };
 }
 
 function parseLink(value: unknown, nodeIds: ReadonlySet<string>): WorkflowLink | null {

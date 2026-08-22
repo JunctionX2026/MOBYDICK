@@ -1,0 +1,247 @@
+기관,데이터명,End Point
+국가기관 · 기타,국립중앙의료원_전국 병·의원 찾기 서비스,https://apis.data.go.kr/B552657/HsptlAsembySearchService
+국가기관 · 기타,국토교통부_(TAGO)_버스노선정보,https://apis.data.go.kr/1613000/BusRouteInfoInqireService
+국가기관 · 기타,국토교통부_(TAGO)_버스도착정보,https://apis.data.go.kr/1613000/ArvlInfoInqireService
+국가기관 · 기타,국토교통부_(TAGO)_버스위치정보,https://apis.data.go.kr/1613000/BusLcInfoInqireService
+국가기관 · 기타,국토교통부_(TAGO)_버스정류소정보,https://apis.data.go.kr/1613000/BusSttnInfoInqireService
+국가기관 · 기타,전국무더위쉼터표준데이터,https://api.data.go.kr/openapi/tn_pubr_public_heat_wve_shltr_api
+국가기관 · 기타,행정안전부_행정동별(통반단위) 성/연령별 주민등록 인구수,https://apis.data.go.kr/1741000/admmSexdAgePpltn
+경상북도 본청,개인서비스요금 정보조회,https://apis.data.go.kr/6470000/PriceInfoPerson
+경상북도 본청,공중화장실 정보 조회,https://apis.data.go.kr/6470000/standardPublictoilets
+경상북도 본청,노인복지시설 현황조회,https://apis.data.go.kr/6470000/GbHappyMap
+경상북도 본청,농기계 위치정보 및 실시간 사고정보 조회 서비스,https://apis.data.go.kr/6470000/VAspot
+경상북도 본청,마을기업 조회 현황,https://apis.data.go.kr/6470000/gbVillageCompany
+경상북도 본청,반려동물동반관광지정보 현황조회,https://apis.data.go.kr/6470000/GbPetTourism
+경상북도 본청,밥상물가 정보조회,https://apis.data.go.kr/6470000/PriceInfoTable
+경상북도 본청,사회적기업 현황조회,https://apis.data.go.kr/6470000/SocialCompany
+경상북도 본청,시군별 주민센터 현황,https://apis.data.go.kr/6470000/gbFamily
+경상북도 본청,어린이보호구역 정보조회,https://apis.data.go.kr/6470000/ChildProtectionZone
+경상북도 본청,영덕군 개별주택가격조회,https://apis.data.go.kr/6470000/YeongdeokHousePrice
+경상북도 본청,전통시장 정보조회,https://apis.data.go.kr/6470000/TraditionalMarket
+경상북도 본청,협동조합 현황조회,https://apis.data.go.kr/6470000/GbCooperation
+경상북도 안동시,개별공시지가자료,https://www.andong.go.kr/openapi/service/arDevJigaService
+경상북도 안동시,개별주택가격,https://www.andong.go.kr/openapi/service/arDevHousePriceService
+경상북도 안동시,보육시설현황 조회,https://www.andong.go.kr/openapi/service/welfareChildCareService
+경상북도 안동시,사회복지시설현황 조회,https://www.andong.go.kr/openapi/service/welfareSocialService
+경상북도 안동시,상수도 수질검사 결과,https://www.andong.go.kr/openapi/service/envWateranalysisResultService
+경상북도 안동시,약국 현황,https://www.andong.go.kr/openapi/service/mediPharService
+경상북도 안동시,에너지공급업체현황 조회,https://www.andong.go.kr/openapi/service/induEnergyStateService
+경상북도 안동시,의료기관 현황,https://www.andong.go.kr/openapi/service/mediHsptService
+경상북도 안동시,제조업체현황 조회,https://www.andong.go.kr/openapi/service/induManufacturerService
+경상북도 안동시,취업정보,https://www.andong.go.kr/openapi/service/induJobService/
+경상북도 포항시,공영 주차장 현황,https://apis.data.go.kr/5020000/pblmngPrkplceSttus
+경상북도 포항시,광역 교통 월별 이용자 현황 전체,https://apis.data.go.kr/5020000/wdffcMnbyUserSttusAll
+경상북도 포항시,광역 교통 월별 행선지 분석 전체,https://apis.data.go.kr/5020000/wdffcMnbyDstnAnalsAll
+경상북도 포항시,광역 교통별 운영 현황 전체,https://apis.data.go.kr/5020000/wdffcOpratSttusAll
+경상북도 포항시,교통 이슈 현황 리스트 지도,https://apis.data.go.kr/5020000/trnsportIssueSttusMap
+경상북도 포항시,교통 통계 주요 도로 교통량 새천년대로,https://apis.data.go.kr/5020000/trnsportStatsMainRoadVmtcNmr
+경상북도 포항시,교통 통계 주요 도로 교통량 포스코대로,https://apis.data.go.kr/5020000/trnsportStatsMainRoadVmtcPsrd
+경상북도 포항시,교통 통계 주요 도로 교통량 희망대로,https://apis.data.go.kr/5020000/trnsportStatsMainRoadVmtcHmr
+경상북도 포항시,교통 통계 주요 도로 속도,https://apis.data.go.kr/5020000/trnsportStatsMainRoadVe
+경상북도 포항시,남녀 성 비율,https://apis.data.go.kr/5020000/mwmnSexRate
+경상북도 포항시,내국인 생활 인구 통합,https://apis.data.go.kr/5020000/nativeLvlhPopltnUnity
+경상북도 포항시,노령 인구,https://apis.data.go.kr/5020000/oaPopltn
+경상북도 포항시,대기오염 환경,https://apis.data.go.kr/5020000/pohangArpltnEnvrn
+경상북도 포항시,대피 장소 목록,https://apis.data.go.kr/5020000/pohangShuntPlaceList
+경상북도 포항시,도로 교통 이슈 현황,https://apis.data.go.kr/5020000/roadTrnsportTrnsportIssueSttus
+경상북도 포항시,도로 통행량 수치,https://apis.data.go.kr/5020000/pohangCityRoadPasngQyNcl
+경상북도 포항시,방문 거주지 현황,https://apis.data.go.kr/5020000/pohangVisitResdncSttus
+경상북도 포항시,방문 현황,https://apis.data.go.kr/5020000/pohangVisitSttus
+경상북도 포항시,버스 정류장별 이용자 추이 단계,https://apis.data.go.kr/5020000/busStopAcctoUserTrnsitnStepTwo
+경상북도 포항시,생산 가능 인구,https://apis.data.go.kr/5020000/prdctnPosblPopltn
+경상북도 포항시,생활 인구 거주지 현황,https://apis.data.go.kr/5020000/pohangLvlhPopltnResdncSttus
+경상북도 포항시,생활 지도 시설 현황,https://apis.data.go.kr/5020000/lvlhMapFcltySttus
+경상북도 포항시,성별 연령별 방문,https://apis.data.go.kr/5020000/pohangSexAcctoAgeAcctoVisit
+경상북도 포항시,성별 연령별 생활 인구 현황,https://apis.data.go.kr/5020000/pohangSexAcctoAgeAcctoLvlhPopltnSttu
+경상북도 포항시,세대 구성,https://apis.data.go.kr/5020000/gnrCfg
+경상북도 포항시,시간대별 주요 도로 평균 속도,https://apis.data.go.kr/5020000/tmzonAcctoMainRoadAvrgVe
+경상북도 포항시,시간별 방문 인구,https://apis.data.go.kr/5020000/pohangTimeAcctoVisitPopltn
+경상북도 포항시,시간별 생활 인구,https://apis.data.go.kr/5020000/pohangTimeAcctoLvlhPopltn
+경상북도 포항시,시내 버스 월별 총이용자 수,https://apis.data.go.kr/5020000/dwtwBusMtAcctoTotUserCo
+경상북도 포항시,시내 버스 일별 총이용자 수,https://apis.data.go.kr/5020000/dwtwBusDeAcctoTotUserCo
+경상북도 포항시,연령별 인구 현황,https://apis.data.go.kr/5020000/ageAcctoPopltnSttus
+경상북도 포항시,예산 현황 세입 세출,https://apis.data.go.kr/5020000/budgetSttusAnlrveAnexptr
+경상북도 포항시,외국인 생활 인구,https://apis.data.go.kr/5020000/frgnrLvlhPopltn
+경상북도 포항시,월별 방문 추이,https://apis.data.go.kr/5020000/pohangVisitTrnsitnMtAccto
+경상북도 포항시,월별 버스 이용자 유형,https://apis.data.go.kr/5020000/mnbyBusUserTy
+경상북도 포항시,월별 유동 인구,https://apis.data.go.kr/5020000/pohangDynmcPopltnMtAccto
+경상북도 포항시,월별 인구 변화 추이,https://apis.data.go.kr/5020000/mtAcctoPopltnChngeTrnsitn
+경상북도 포항시,월별 일별 통행량,https://apis.data.go.kr/5020000/mtAcctoDeAcctoPasngQy
+경상북도 포항시,유소년 인구,https://apis.data.go.kr/5020000/youthPopltn
+경상북도 포항시,인구 건물 위치,https://apis.data.go.kr/5020000/popltnBuldLc
+경상북도 포항시,일별 방문 추이,https://apis.data.go.kr/5020000/pohangVisitTrnsitnDaly
+경상북도 포항시,전입 성별 현황,https://apis.data.go.kr/5020000/trnsfrnSexdstnSttus
+경상북도 포항시,전입 요건,https://apis.data.go.kr/5020000/trnsfrnFctr
+경상북도 포항시,전출 성별 현황,https://apis.data.go.kr/5020000/mvtSexdstnSttus
+경상북도 포항시,전출 요건,https://apis.data.go.kr/5020000/mvtRqisit
+경상북도 포항시,주민등록 인구 현황,https://apis.data.go.kr/5020000/rsgstPopltnSttus
+경상북도 포항시,지역별 기상 현황,https://apis.data.go.kr/5020000/areaAcctoWetherSttus
+경상북도 포항시,지역별 노령 인구 현황,https://apis.data.go.kr/5020000/areaAcctoOaPopltnSttus
+경상북도 포항시,지역별 생산 가능 인구 현황,https://apis.data.go.kr/5020000/areaAcctoPrdctnPosblPopltnSttus
+경상북도 포항시,지역별 생활 인구 현황,https://apis.data.go.kr/5020000/pohangAreaAcctoLvlhPopltnSttus
+경상북도 포항시,지역별 유소년 인구 현황,https://apis.data.go.kr/5020000/areaAcctoYouthPopltnSttus
+경상북도 포항시,지역별 주민등록 인구 현황,https://apis.data.go.kr/5020000/areaAcctoRsgstPopltnSttus
+경상북도 경주시,걷기길 정보,https://apis.data.go.kr/5050000/walkingPathService
+경상북도 경주시,게스트하우스 현황,https://apis.data.go.kr/5050000/guestHouseService
+경상북도 경주시,경주문화관광_권역별관광지,https://apis.data.go.kr/5050000/dstrctsTrrsrtService
+경상북도 경주시,경주문화관광_먹거리 핫플레이스 정보,https://apis.data.go.kr/5050000/eatHtpService
+경상북도 경주시,경주문화관광_메뉴별음식점,https://apis.data.go.kr/5050000/menuRstrtService
+경상북도 경주시,경주문화관광_카페 및 찻집 정보,https://apis.data.go.kr/5050000/cafeInfoService
+경상북도 경주시,경주문화관광_테마별 숙박업 정보,https://apis.data.go.kr/5050000/themaLdgsService
+경상북도 경주시,고택 체험 정보,https://apis.data.go.kr/5050000/oldHouseExperienceService
+경상북도 경주시,공연 현황,https://apis.data.go.kr/5050000/gongYeonService
+경상북도 경주시,관광자원영상이미지_국가지정 국보,https://apis.data.go.kr/5050000/gkboService
+경상북도 경주시,관광자원영상이미지_국가지정 보물,https://apis.data.go.kr/5050000/nationTrsureService
+경상북도 경주시,관광자원영상이미지_국가지정 사적 및 명승,https://apis.data.go.kr/5050000/hrcspBspotService
+경상북도 경주시,관광자원영상이미지_남산권 관광지,https://apis.data.go.kr/5050000/namsanTrrsrtService
+경상북도 경주시,관광자원영상이미지_동해권 관광지,https://apis.data.go.kr/5050000/esTrrsrtService
+경상북도 경주시,관광자원영상이미지_보문관광단지권 관광지,https://apis.data.go.kr/5050000/bomunTrrsrtService
+경상북도 경주시,관광자원영상이미지_불국사권 관광지,https://apis.data.go.kr/5050000/bgsTrrsrtService
+경상북도 경주시,관광자원영상이미지_사진전 수상작,https://apis.data.go.kr/5050000/photoExbiService
+경상북도 경주시,관광자원영상이미지_서부 북부권 관광지,https://apis.data.go.kr/5050000/wstprtNrtprtTrrsrtService
+경상북도 경주시,관광자원영상이미지_시내권 관광지,https://apis.data.go.kr/5050000/dwtwTrrstrService
+경상북도 경주시,관광자원영상이미지_중요무형문화재,https://apis.data.go.kr/5050000/imprtncIglstService
+경상북도 경주시,관광자원영상이미지_중요민속자료,https://apis.data.go.kr/5050000/cmcqFltmsDtaService
+경상북도 경주시,관광자원영상이미지_천연기념물,https://apis.data.go.kr/5050000/ntrmnService
+경상북도 경주시,관광지 현황,https://apis.data.go.kr/5050000/touristDestinationService
+경상북도 경주시,교육강좌 현황,https://apis.data.go.kr/5050000/educationCourseService
+경상북도 경주시,교촌마을 체험장 현황,https://apis.data.go.kr/5050000/kyochonVillageExperienceService
+경상북도 경주시,농촌교육장 체험마을 정보,https://apis.data.go.kr/5050000/ruralEducationCenterVillageService
+경상북도 경주시,디저트점 현황,https://apis.data.go.kr/5050000/dessertStoreStatusService
+경상북도 경주시,무장애 여행 정보,https://apis.data.go.kr/5050000/barrierFreeTravelService
+경상북도 경주시,문화관광해설사안내 정보,https://apis.data.go.kr/5050000/cultureTourismCommentatorGuideService
+경상북도 경주시,버스 관련 정보_GW,https://apis.data.go.kr/5050000/openapi
+경상북도 경주시,숲길 정보,https://apis.data.go.kr/5050000/forestRoadService
+경상북도 경주시,시정뉴스 현황,https://apis.data.go.kr/5050000/municipalNewsService
+경상북도 경주시,야경 정보,https://apis.data.go.kr/5050000/theNightViewService
+경상북도 경주시,연도별 화랑마을 예약 현황,https://apis.data.go.kr/5050000/hwarangVillageReservationService
+경상북도 경주시,"오토캠핑,야영장 현황",https://apis.data.go.kr/5050000/autoCampingAndCampsiteService
+경상북도 경주시,의복 체험 정보,https://apis.data.go.kr/5050000/clothingExperienceService
+경상북도 경주시,이색 체험 정보,https://apis.data.go.kr/5050000/uniqueExperienceService
+경상북도 경주시,자동차대여업체 현황,https://apis.data.go.kr/5050000/carRentalCompanyService
+경상북도 경주시,전망 좋은 카페 현황,https://apis.data.go.kr/5050000/niceViewCafeService
+경상북도 경주시,전망포인트,https://apis.data.go.kr/5050000/observationPointService
+경상북도 경주시,전시회 현황,https://apis.data.go.kr/5050000/exhibitionStatusService
+경상북도 경주시,전자책자(ebook) 정보,https://apis.data.go.kr/5050000/electronicBookletService
+경상북도 경주시,축제 현황,https://apis.data.go.kr/5050000/festivalStatusService
+경상북도 경주시,콘도 현황,https://apis.data.go.kr/5050000/condoStatusService
+경상북도 경주시,한옥 호텔 현황,https://apis.data.go.kr/5050000/hanOgHotelService
+경상북도 경주시,화랑마을 청소년 단체 수련활동 인증 프로그램 정보,https://apis.data.go.kr/5050000/youthGroupTrainingActivitiesService
+경상북도 경주시,화랑전시관 전시 현황,https://apis.data.go.kr/5050000/galleryExhibitionService
+경상북도 경주시,황리단길 먹거리 핫플레이스 정보,https://apis.data.go.kr/5050000/hwangridangilFoodHotPlaceService
+경상북도 영천시,CCTV 현황,https://apis.data.go.kr/5100000/YeongcheonCCTV
+경상북도 영천시,강우량시설 현황,https://apis.data.go.kr/5100000/YeongcheonRainfallstation
+경상북도 영천시,경질유 중질유 사용업체현황,https://apis.data.go.kr/5100000/YeongcheonFuelcompany
+경상북도 영천시,공장 현황,https://apis.data.go.kr/5100000/YeongcheonFactory
+경상북도 영천시,군장병 할인업소 현황,https://apis.data.go.kr/5100000/YeongcheonMilitarydiscountstore
+경상북도 영천시,노인교실 현황,https://apis.data.go.kr/5100000/YeongcheonSeniorclass
+경상북도 영천시,노인복지시설 현황,https://apis.data.go.kr/5100000/YeongchoenSeniorwelfare
+경상북도 영천시,농산물산지 현황,https://apis.data.go.kr/5100000/YeongcheonFarmproduction
+경상북도 영천시,농어촌민박 현황,https://apis.data.go.kr/5100000/YeongcheonRuralguesthouse
+경상북도 영천시,동네 체육시설 현황,https://apis.data.go.kr/5100000/YeongcheonPublicsportsfacility
+경상북도 영천시,동물병원 현황,https://apis.data.go.kr/5100000/YeongcheonAnimalhospital
+경상북도 영천시,동물약국현황,https://apis.data.go.kr/5100000/YeongcheonAnimalpharmacy
+경상북도 영천시,마을회관현황,https://apis.data.go.kr/5100000/YeongcheonVillagecenter
+경상북도 영천시,면직물 생산공장 현황,https://apis.data.go.kr/5100000/YeongcheonTextilefactory
+경상북도 영천시,미용업현황,https://apis.data.go.kr/5100000/YeongcheonBeautysalon
+경상북도 영천시,부동산중개업 현황,https://apis.data.go.kr/5100000/YeongcheonRealestate
+경상북도 영천시,사업장폐기물배출자신고 현황,https://apis.data.go.kr/5100000/YeongcheonBusinesswaste
+경상북도 영천시,상수도원격검침 지역별 현황,https://apis.data.go.kr/5100000/YeongcheonAMR
+경상북도 영천시,새마을회관 현황,https://apis.data.go.kr/5100000/YeongcheonSaemaulcenter
+경상북도 영천시,안전상비의약품 판매업 현황,https://apis.data.go.kr/5100000/YeongcheonOTCmedicine
+경상북도 영천시,약국 현황,https://apis.data.go.kr/5100000/YeongcheonPharmacy
+경상북도 영천시,연료별 자동차 등록현황,https://apis.data.go.kr/5100000/YeongcheonVehicleByFuel
+경상북도 영천시,위생관리등급평가 결과,https://apis.data.go.kr/5100000/YeongcheonHygienerating
+경상북도 영천시,의료기관현황,https://apis.data.go.kr/5100000/YeongcheonMedicalfacility
+경상북도 영천시,의료기기판매업소 현황,https://apis.data.go.kr/5100000/YeongcheonMedicaldevice
+경상북도 영천시,일반음식점현황,https://apis.data.go.kr/5100000/YeongcheonRestaurants
+경상북도 영천시,임신부 할인업소 현황,https://apis.data.go.kr/5100000/YeongcheonPregnancydiscountstore
+경상북도 영천시,장례식장현황,https://apis.data.go.kr/5100000/YeongcheonFuneralhome
+경상북도 영천시,장애인복지시설 현황,https://apis.data.go.kr/5100000/YeongcheonDisabilitywelfare
+경상북도 영천시,저수지 보수보강 현황,https://apis.data.go.kr/5100000/YeongcheonReservoirrepair
+경상북도 영천시,전문건설업 현황,https://apis.data.go.kr/5100000/YeongcheonConstructioncompany
+경상북도 영천시,제설(모래) 배치현황,https://apis.data.go.kr/5100000/YeongcheonSnowsand
+경상북도 영천시,지역아동센터 현황,https://apis.data.go.kr/5100000/YeongcheonChildcenter
+경상북도 영천시,지진재난 이재민수용시설 현황,https://apis.data.go.kr/5100000/YeongcheonEarthquakeshelter
+경상북도 영천시,직업소개소 현황,https://apis.data.go.kr/5100000/YeongcheonJobcenter
+경상북도 영천시,착한가격업소 현황,https://apis.data.go.kr/5100000/YeongcheonGoodpricestore
+경상북도 영천시,체육시설업현황,https://apis.data.go.kr/5100000/YeongcheonSportsfacility
+경상북도 영천시,캠핑장현황,https://apis.data.go.kr/5100000/YeongcheonCampground
+경상북도 영천시,코로나 확진자 월별 발생수 현황,https://apis.data.go.kr/5100000/YeongcheonCovid19
+경상북도 영천시,태양광발전사업 허가 현황,https://apis.data.go.kr/5100000/YeongcheonSolarpower
+경상북도 영천시,토석채취허가 및 채석신고현황,https://apis.data.go.kr/5100000/YeongcheonStonequarrying
+경상북도 영천시,한약방등록현황,https://apis.data.go.kr/5100000/YeongcheonHerbalmedicine
+경상북도 영천시,행사 및 축제 현황,https://apis.data.go.kr/5100000/YeongcheonFestival
+경상북도 영주시,가족관계등록신고사건건수,https://apis.data.go.kr/5090000/reportCaseCheckService
+경상북도 영주시,개발행위 허가내역,https://apis.data.go.kr/5090000/developmentPermissionService
+경상북도 영주시,건물재산,https://apis.data.go.kr/5090000/buildingPropertyService
+경상북도 영주시,공동주택 관리 보조금 지원현황,https://apis.data.go.kr/5090000/publicHousingSubsidyService
+경상북도 영주시,금연치료 의료기관,https://apis.data.go.kr/5090000/antismokingTreatmentService
+경상북도 영주시,노인교실대학현황,https://apis.data.go.kr/5090000/seniorClassCollegeService
+경상북도 영주시,노인복지시설,https://apis.data.go.kr/5090000/elderlyWelfareFacilitiesService
+경상북도 영주시,농어촌민박 신고대장,https://apis.data.go.kr/5090000/ruralHomestayReportListService
+경상북도 영주시,농지전용허가 현황,https://apis.data.go.kr/5090000/farmlandOnlyService
+경상북도 영주시,농촌관광시설 현황,https://apis.data.go.kr/5090000/ruralTourismFacilitiesService
+경상북도 영주시,담배소비세 과세현황,https://apis.data.go.kr/5090000/tobaccoConsumptionTaxService
+경상북도 영주시,도시재생 뉴딜 및 새뜰마을사업 현황,https://apis.data.go.kr/5090000/urbanRegenerationService
+경상북도 영주시,드림스타트 시설현황,https://apis.data.go.kr/5090000/dreamStartFacilityService
+경상북도 영주시,모자보건사업실적,https://apis.data.go.kr/5090000/maternalAndChildHealthService
+경상북도 영주시,보건지소 및 진료소 현황,https://apis.data.go.kr/5090000/healthCentersAndClinicsService
+경상북도 영주시,부서별 정현원 현황,https://apis.data.go.kr/5090000/departmentPersonsService
+경상북도 영주시,불법주정차 CCTV 단속 현황,https://apis.data.go.kr/5090000/illegalParkingService
+경상북도 영주시,산지전용허가 현황,https://apis.data.go.kr/5090000/exclusivePermissionService
+경상북도 영주시,소독업소 현황,https://apis.data.go.kr/5090000/disinfectionShopService
+경상북도 영주시,시정뉴스,https://apis.data.go.kr/5090000/municipaNewService
+경상북도 영주시,안심식당 현황,https://apis.data.go.kr/5090000/safeRestaurantService
+경상북도 영주시,연도별 문화예술단체,https://apis.data.go.kr/5090000/culturalOrganizationService
+경상북도 영주시,연도별 시민운동장 공공체육시설 사용현황,https://apis.data.go.kr/5090000/publicSportsFacilityService
+경상북도 영주시,연도별 주요기업 유치현황,https://apis.data.go.kr/5090000/attractionStatusService
+경상북도 영주시,연도별 지방세 체납현황,https://apis.data.go.kr/5090000/localTaxArrearsService
+경상북도 영주시,연도별 하수슬러지 발생 및 처리량,https://apis.data.go.kr/5090000/sewageSludgeService
+경상북도 영주시,영주맛집 현황,https://apis.data.go.kr/5090000/goodRestaurantStatusService
+경상북도 영주시,용도지구,https://apis.data.go.kr/5090000/useDistrictService
+경상북도 영주시,용도지역,https://apis.data.go.kr/5090000/useAreaService
+경상북도 영주시,이행강제금 현황,https://apis.data.go.kr/5090000/compulsoryPaymentService
+경상북도 영주시,일반음식점 입식테이블 설치지원 업소현황,https://apis.data.go.kr/5090000/standingTableBusinessService
+경상북도 영주시,임상병리검사업무현황,https://apis.data.go.kr/5090000/clinicalPathologyService
+경상북도 영주시,장기요양시설,https://apis.data.go.kr/5090000/nursingFacilityService
+경상북도 영주시,장애인 단체 등록현황,https://apis.data.go.kr/5090000/disabledOrganizationService
+경상북도 영주시,장애인 유형별 정도별 등록현황,https://apis.data.go.kr/5090000/typeOfDisabilityService
+경상북도 영주시,장애인복지시설,https://apis.data.go.kr/5090000/welfareForTheDisabledService
+경상북도 영주시,청소년시설 현황,https://apis.data.go.kr/5090000/youthFacilityService
+경상북도 영주시,체납차량 번호판 영치 및 공매 현황,https://apis.data.go.kr/5090000/delinquentVehicleService
+경상북도 영주시,태양광발전사업 허가내역,https://apis.data.go.kr/5090000/solarBusinessService
+경상북도 영주시,토지재산,https://apis.data.go.kr/5090000/landPropertyService
+경상북도 구미시,가축분뇨 배출시설 설치 허가 농가,https://apis.data.go.kr/5080000/lvstckexcrsDhgpInstlPrmisnFrmhsSportService
+경상북도 구미시,경로당,https://apis.data.go.kr/5080000/hsfhgService
+경상북도 구미시,경찰서 무인카메라 설치 현황,https://apis.data.go.kr/5080000/polcsttnCctvSttuService
+경상북도 구미시,공공와이파이 현황,https://apis.data.go.kr/5080000/publicWifiSportService
+경상북도 구미시,공동주택 현황,https://apis.data.go.kr/5080000/aphusSportService
+경상북도 구미시,노인 복지 시설 현황,https://apis.data.go.kr/5080000/odsnWlfareInfrstrSportService
+경상북도 구미시,농경지 용수 공급 시설,https://apis.data.go.kr/5080000/frlndUswtrSuplyFcltyService
+경상북도 구미시,도서관 정보,https://apis.data.go.kr/5080000/tb_gumi_library_info
+경상북도 구미시,문화재 정보,https://apis.data.go.kr/5080000/crltsInfoService
+경상북도 구미시,물가 정보,https://apis.data.go.kr/5080000/pricesInfoService
+경상북도 구미시,버스 노선,https://apis.data.go.kr/5080000/busRouteService
+경상북도 구미시,버스 정거장,https://apis.data.go.kr/5080000/busSttnService
+경상북도 구미시,생활 방범 cctv,https://apis.data.go.kr/5080000/lvlhCrmprvCctvService
+경상북도 구미시,어린이 공원 CCTV,https://apis.data.go.kr/5080000/childParkCctvService
+경상북도 구미시,어린이 보호 구역,https://apis.data.go.kr/5080000/childPrtcZoneService
+경상북도 구미시,일반 음식점,https://apis.data.go.kr/5080000/gnrlRstrtService
+경상북도 구미시,저수지 현황,https://apis.data.go.kr/5080000/poolSttusService
+경상북도 구미시,체육시설업 현황,https://apis.data.go.kr/5080000/pafbizSttusService
+경상북도 구미시,축산 농가 현황,https://apis.data.go.kr/5080000/stkrsFrmhsSttusService
+경상북도 구미시,학교 주변 cctv,https://apis.data.go.kr/5080000/schulCfrCctvService
+경상북도 구미시,화학 물질 누출 대응 시스템 취급업체,https://apis.data.go.kr/5080000/chmstryMttrLkgCntrmsrSysTrtmntEntrpsService
+경상북도 상주시,가축 사육업,https://apis.data.go.kr/5110000/animalBreeding
+경상북도 상주시,경로당 현황,https://apis.data.go.kr/5110000/olderAdultCentero
+경상북도 상주시,계약 정보,https://apis.data.go.kr/5110000/contractDetails
+경상북도 상주시,담배 소매인,https://apis.data.go.kr/5110000/tobaccoShop
+경상북도 상주시,대금 지급 정보,https://apis.data.go.kr/5110000/paymentdetails
+경상북도 상주시,상주 박물관 소장유물,https://apis.data.go.kr/5110000/museumHoldings
+경상북도 상주시,일반 건축물 시가 표준액,https://apis.data.go.kr/5110000/propertyValue
+경상북도 상주시,일반 음식점,https://apis.data.go.kr/5110000/generalFullService
+경상북도 상주시,청소년수련관 홈페이지 공지사항,https://apis.data.go.kr/5110000/youthTrainingCenter
+경상북도 상주시,축산물 판매업 현황,https://apis.data.go.kr/5110000/livestockSales
+경상북도 경산시,관광자료 조회 서비스,https://apis.data.go.kr/5130000/openapi/GbgsTourService
+경상북도 울산광역시,항만 정보,(엔드포인트 미표시 · 2023년 승인 건)

@@ -10,6 +10,7 @@
 | 도메인 용어와 식별자 규칙 | [`specs/product/glossary.md`](../specs/product/glossary.md)    |
 | 단계 사이 데이터 형식     | `specs/features/010-*`, `specs/features/011-*`                 |
 | 외부 사례를 채택한 이유   | [`research/README.md`](../research/README.md)                  |
+| 로컬 GovData 데이터 소스  | [`LOCAL_DEVELOPMENT.md`](LOCAL_DEVELOPMENT.md)                 |
 | 색상 토큰과 컴포넌트 규칙 | [`packages/design-system/AGENTS.md`](../packages/design-system/AGENTS.md) |
 | 아이콘 추가 규칙          | [`packages/icon/AGENTS.md`](../packages/icon/AGENTS.md)        |
 | 저장소와 GraphQL 표면     | [`apps/web/AGENTS.md`](../apps/web/AGENTS.md)                  |

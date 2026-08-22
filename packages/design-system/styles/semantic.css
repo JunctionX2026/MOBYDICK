@@ -4,6 +4,8 @@
   --moby-color-bg-layer-default: var(--moby-color-palette-gray-00);
   --moby-color-bg-layer-basement: var(--moby-color-palette-gray-100);
   --moby-color-bg-layer-floating: var(--moby-color-palette-gray-00);
+  --moby-color-bg-layer-modal: var(--moby-color-palette-gray-00);
+  --moby-color-bg-layer-side-navigation: var(--moby-color-palette-gray-100);
 
   --moby-color-bg-neutral-solid: var(--moby-color-palette-gray-900);
   --moby-color-bg-neutral-solid-pressed: var(--moby-color-palette-gray-800);

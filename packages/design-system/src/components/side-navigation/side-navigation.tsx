@@ -55,7 +55,11 @@ function Root({ className, ...props }: ComponentProps<"nav">) {
 
   return (
     <nav
-      className={cn(sideNavigationRootClassName, className)}
+      className={cn(
+        sideNavigationRootClassName,
+        collapsed ? "w-side-navigation-collapsed" : "w-side-navigation",
+        className,
+      )}
       data-side-navigation-state={collapsed ? "collapsed" : "expanded"}
       {...props}
     />

@@ -1,0 +1,165 @@
+[
+  {
+    "dataset_id": "15097253",
+    "file_id": "15097253",
+    "title": "경상북도 구미시_노인 복지 시설 현황",
+    "op": "구미시 노인 복지 시설 현황",
+    "url": "https://apis.data.go.kr/5080000/odsnWlfareInfrstrSportService/getOdsnWlfareInfrstrSport",
+    "base": {},
+    "status": "ok",
+    "rows": 175,
+    "cols": 16,
+    "params": {},
+    "format": {
+      "type": "json"
+    },
+    "key_mode": "dec",
+    "kind": "json",
+    "total_count": 175
+  },
+  {
+    "dataset_id": "ep_YeongcheonCCTV",
+    "file_id": "ep_YeongcheonCCTV",
+    "title": "경상북도 영천시_CCTV 현황",
+    "op": "CCTV 현황",
+    "url": "https://apis.data.go.kr/5100000/YeongcheonCCTV/getResult",
+    "base": {},
+    "status": "ok",
+    "rows": 2300,
+    "cols": 13,
+    "params": {},
+    "format": {
+      "type": "json"
+    },
+    "key_mode": "dec",
+    "kind": "json",
+    "total_count": 2300
+  },
+  {
+    "dataset_id": "ep_YeongcheonDisabilitywelfare",
+    "file_id": "ep_YeongcheonDisabilitywelfare",
+    "title": "경상북도 영천시_장애인복지시설 현황",
+    "op": "장애인복지시설 현황",
+    "url": "https://apis.data.go.kr/5100000/YeongcheonDisabilitywelfare/getResult",
+    "base": {},
+    "status": "ok",
+    "rows": 10,
+    "cols": 6,
+    "params": {},
+    "format": {
+      "type": "json"
+    },
+    "key_mode": "dec",
+    "kind": "json",
+    "total_count": 10
+  },
+  {
+    "dataset_id": "ep_YeongcheonFarmproduction",
+    "file_id": "ep_YeongcheonFarmproduction",
+    "title": "경상북도 영천시_농산물산지 현황",
+    "op": "농산물산지 현황",
+    "url": "https://apis.data.go.kr/5100000/YeongcheonFarmproduction/getResult",
+    "base": {},
+    "status": "ok",
+    "rows": 11,
+    "cols": 5,
+    "params": {},
+    "format": {
+      "type": "json"
+    },
+    "key_mode": "dec",
+    "kind": "json",
+    "total_count": 11
+  },
+  {
+    "dataset_id": "ep_YeongcheonMedicalfacility",
+    "file_id": "ep_YeongcheonMedicalfacility",
+    "title": "경상북도 영천시_의료기관현황",
+    "op": "의료기관현황",
+    "url": "https://apis.data.go.kr/5100000/YeongcheonMedicalfacility/getResult",
+    "base": {},
+    "status": "ok",
+    "rows": 123,
+    "cols": 9,
+    "params": {},
+    "format": {
+      "type": "json"
+    },
+    "key_mode": "dec",
+    "kind": "json",
+    "total_count": 123
+  },
+  {
+    "dataset_id": "ep_YeongcheonPharmacy",
+    "file_id": "ep_YeongcheonPharmacy",
+    "title": "경상북도 영천시_약국 현황",
+    "op": "약국 현황",
+    "url": "https://apis.data.go.kr/5100000/YeongcheonPharmacy/getResult",
+    "base": {},
+    "status": "ok",
+    "rows": 47,
+    "cols": 6,
+    "params": {},
+    "format": {
+      "type": "json"
+    },
+    "key_mode": "dec",
+    "kind": "json",
+    "total_count": 47
+  },
+  {
+    "dataset_id": "ep_YeongcheonRestaurants",
+    "file_id": "ep_YeongcheonRestaurants",
+    "title": "경상북도 영천시_일반음식점현황",
+    "op": "일반음식점현황",
+    "url": "https://apis.data.go.kr/5100000/YeongcheonRestaurants/getResult",
+    "base": {},
+    "status": "ok",
+    "rows": 1628,
+    "cols": 6,
+    "params": {},
+    "format": {
+      "type": "json"
+    },
+    "key_mode": "dec",
+    "kind": "json",
+    "total_count": 1628
+  },
+  {
+    "dataset_id": "ep_YeongchoenSeniorwelfare",
+    "file_id": "ep_YeongchoenSeniorwelfare",
+    "title": "경상북도 영천시_노인복지시설 현황",
+    "op": "노인복지시설 현황",
+    "url": "https://apis.data.go.kr/5100000/YeongchoenSeniorwelfare/getResult",
+    "base": {},
+    "status": "ok",
+    "rows": 25,
+    "cols": 8,
+    "params": {},
+    "format": {
+      "type": "json"
+    },
+    "key_mode": "dec",
+    "kind": "json",
+    "total_count": 25
+  },
+  {
+    "dataset_id": "ep_pohangArpltnEnvrn",
+    "file_id": "ep_pohangArpltnEnvrn",
+    "title": "경상북도 포항시_대기오염 환경",
+    "op": "대기오염 환경",
+    "url": "https://apis.data.go.kr/5020000/pohangArpltnEnvrn/getPohangArpltnEnvrn",
+    "base": {},
+    "status": "ok",
+    "rows": 20000,
+    "cols": 26,
+    "params": {},
+    "format": {
+      "type": "json"
+    },
+    "key_mode": "dec",
+    "kind": "json",
+    "total_count": 254241,
+    "truncated": true
+  }
+]
