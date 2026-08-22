@@ -37,7 +37,10 @@
     --moby-color-bg-informative-weak-pressed: var(--moby-color-palette-blue-900);
 
     --moby-color-bg-disabled: var(--moby-color-palette-gray-900);
+    --moby-color-bg-skeleton: var(--moby-color-palette-gray-800);
     --moby-color-bg-transparent-pressed: oklch(100% 0 0 / 0.1);
+    --moby-color-bg-transparent-selected: oklch(100% 0 0 / 0.13);
+    --moby-color-bg-transparent-selected-pressed: oklch(100% 0 0 / 0.2);
     --moby-color-bg-overlay: oklch(0% 0 0 / 0.6);
 
     --moby-color-fg-neutral: var(--moby-color-palette-gray-100);
@@ -76,5 +79,8 @@
     --moby-elevation-raised: 0 1px 2px oklch(0% 0 0 / 0.4);
     --moby-elevation-floating: 0 4px 12px oklch(0% 0 0 / 0.5);
     --moby-elevation-overlay: 0 12px 32px oklch(0% 0 0 / 0.6);
+
+    --moby-gradient-shimmer: oklch(100% 0 0 / 0) 0%, oklch(100% 0 0 / 0.1) 46%,
+      oklch(100% 0 0 / 0.1) 54%, oklch(100% 0 0 / 0) 100%;
   }
 }

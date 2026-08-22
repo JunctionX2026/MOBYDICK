@@ -48,7 +48,10 @@
   --color-bg-informative-weak-pressed: var(--moby-color-bg-informative-weak-pressed);
 
   --color-bg-disabled: var(--moby-color-bg-disabled);
+  --color-bg-skeleton: var(--moby-color-bg-skeleton);
   --color-bg-transparent-pressed: var(--moby-color-bg-transparent-pressed);
+  --color-bg-transparent-selected: var(--moby-color-bg-transparent-selected);
+  --color-bg-transparent-selected-pressed: var(--moby-color-bg-transparent-selected-pressed);
   --color-bg-overlay: var(--moby-color-bg-overlay);
 
   --color-fg-neutral: var(--moby-color-fg-neutral);
@@ -94,4 +97,15 @@
   --shadow-elevation-raised: var(--moby-elevation-raised);
   --shadow-elevation-floating: var(--moby-elevation-floating);
   --shadow-elevation-overlay: var(--moby-elevation-overlay);
+
+  --animate-shimmer: shimmer var(--moby-duration-shimmer) var(--moby-easing-standard) infinite;
+
+  @keyframes shimmer {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(100%);
+    }
+  }
 }

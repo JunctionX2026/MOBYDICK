@@ -66,6 +66,8 @@ describe("token layers", () => {
 
     expect(rawValues).toEqual([
       "--moby-color-bg-transparent-pressed",
+      "--moby-color-bg-transparent-selected",
+      "--moby-color-bg-transparent-selected-pressed",
       "--moby-color-bg-overlay",
     ]);
   });

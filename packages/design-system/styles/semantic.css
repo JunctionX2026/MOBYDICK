@@ -38,7 +38,10 @@
   --moby-color-bg-informative-weak-pressed: var(--moby-color-palette-blue-200);
 
   --moby-color-bg-disabled: var(--moby-color-palette-gray-200);
+  --moby-color-bg-skeleton: var(--moby-color-palette-gray-200);
   --moby-color-bg-transparent-pressed: oklch(15.5% 0.009 260 / 0.06);
+  --moby-color-bg-transparent-selected: oklch(15.5% 0.009 260 / 0.09);
+  --moby-color-bg-transparent-selected-pressed: oklch(15.5% 0.009 260 / 0.14);
   --moby-color-bg-overlay: oklch(15.5% 0.009 260 / 0.45);
 
   --moby-color-fg-neutral: var(--moby-color-palette-gray-900);
@@ -82,8 +85,12 @@
   --moby-duration-fast: 120ms;
   --moby-duration-medium: 200ms;
   --moby-duration-slow: 320ms;
+  --moby-duration-shimmer: 1.5s;
 
   --moby-easing-standard: cubic-bezier(0.2, 0, 0, 1);
+
+  --moby-gradient-shimmer: oklch(100% 0 0 / 0) 0%, oklch(100% 0 0 / 0.67) 46%,
+    oklch(100% 0 0 / 0.67) 54%, oklch(100% 0 0 / 0) 100%;
 
   --moby-elevation-raised: 0 1px 2px oklch(15.5% 0.009 260 / 0.08);
   --moby-elevation-floating: 0 4px 12px oklch(15.5% 0.009 260 / 0.1);

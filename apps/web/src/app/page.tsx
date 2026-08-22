@@ -1,9 +1,10 @@
 import { Badge, Button, Callout, Card } from "@mobydick/design-system";
+import Link from "next/link";
 import { PipelineStage } from "./_components/pipeline-stage";
 
 export default function HomePage() {
   return (
-    <main className="mx-auto flex max-w-5xl flex-col gap-10 px-6 py-16">
+    <main className="mx-auto flex max-w-5xl flex-col gap-10 px-6 py-12">
       <header className="flex flex-col gap-3">
         <Badge emphasis="weak" tone="brand">
           JunctionX Korea 2026
@@ -14,8 +15,18 @@ export default function HomePage() {
           Serve.
         </p>
         <div className="flex gap-2 pt-2">
-          <Button>시작하기</Button>
-          <Button variant="outline">스펙 보기</Button>
+          <Button asChild>
+            <Link href="/discover">시작하기</Link>
+          </Button>
+          <Button asChild variant="outline">
+            <a
+              href="https://github.com/JunctionX2026/MOBYDICK/tree/main/specs"
+              rel="noreferrer"
+              target="_blank"
+            >
+              스펙 보기
+            </a>
+          </Button>
         </div>
       </header>
 

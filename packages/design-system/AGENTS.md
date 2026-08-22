@@ -35,7 +35,8 @@
 - variant 조합이 표를 이루면(badge의 tone x emphasis) 표를 `satisfies Record<...>`로 선언하고 `compound`를 거기서 만들어요. 손으로 나열하면 빠진 조합을 아무도 못 잡아요.
 - variant가 없는 slot은 레시피로 감싸지 않고 클래스 문자열 상수로 둬요.
 - 여러 부분으로 구성된 컴포넌트는 slot별로 나누고(`calloutRootRecipe`, `calloutIconClassName`) 컴포넌트는 `Object.assign`으로 묶어요.
-- 트리거로 쓰는 컴포넌트는 `asChild`를 지원해요. Radix `Slot`을 써요.
+- 트리거로 쓰는 컴포넌트는 `asChild`를 지원해요. Radix `Slot`을 써요. 라벨과 아이콘을 함께 그리는 컴포넌트는 자식 요소를 루트로 삼고 자식의 children을 라벨로 써요. Fragment를 `Slot`에 넘기면 className이 사라져요.
+- 상태를 가지는 컴포넌트에만 `"use client"`를 선언해요. 나머지는 서버 컴포넌트로 둬요.
 - 포커스, dismiss, position 동작이 필요하면 직접 만들지 않고 Radix primitive를 먼저 확인해요.
 - DOM props와 `ref`, 접근 가능한 이름, `focus-visible` 상태를 보존해요.
 - 새 컴포넌트는 kebab-case 폴더에 구현과 `index.ts`를 두고 `src/index.ts`에서 export해요.
