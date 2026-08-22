@@ -1,4 +1,4 @@
-import { Badge, Card } from "@mobydick/design-system";
+import { Badge, Card, cn } from "@mobydick/design-system";
 import { match } from "ts-pattern";
 
 export type StageId = "discover" | "compose" | "serve";
@@ -7,9 +7,10 @@ export interface PipelineStageProps {
   id: StageId;
   title: string;
   handoff: string;
+  className?: string;
 }
 
-export function PipelineStage({ handoff, id, title }: PipelineStageProps) {
+export function PipelineStage({ className, handoff, id, title }: PipelineStageProps) {
   const { label, step, tone } = match(id)
     .with("discover", () => ({ label: "찾는다", step: "①", tone: "informative" as const }))
     .with("compose", () => ({ label: "붙인다", step: "②", tone: "brand" as const }))
@@ -17,7 +18,7 @@ export function PipelineStage({ handoff, id, title }: PipelineStageProps) {
     .exhaustive();
 
   return (
-    <Card className="flex-1">
+    <Card className={cn("flex-1", className)}>
       <Card.Header>
         <div className="flex items-center gap-2">
           <span className="text-fg-neutral-subtle text-xs font-semibold">{step}</span>
