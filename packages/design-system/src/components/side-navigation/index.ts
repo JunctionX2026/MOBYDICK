@@ -1,5 +1,7 @@
 export {
   SideNavigation,
+  useSideNavigation,
+  type SideNavigationItemIconProps,
   type SideNavigationItemProps,
-  type SideNavigationProps,
+  type SideNavigationProviderProps,
 } from "./side-navigation";

@@ -94,6 +94,9 @@
 
   --ease-standard: var(--moby-easing-standard);
 
+  --spacing-side-navigation: var(--moby-dimension-side-navigation);
+  --spacing-side-navigation-collapsed: var(--moby-dimension-side-navigation-collapsed);
+
   --shadow-elevation-raised: var(--moby-elevation-raised);
   --shadow-elevation-floating: var(--moby-elevation-floating);
   --shadow-elevation-overlay: var(--moby-elevation-overlay);

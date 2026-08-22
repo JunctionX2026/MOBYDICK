@@ -27,6 +27,7 @@
 | `research`                 | 현재 결정에 필요한 외부 근거           | [`research/README.md`](research/README.md)                           |
 | `apps/web`                 | Next.js 웹 앱                          | [`apps/web/AGENTS.md`](apps/web/AGENTS.md)                           |
 | `packages/design-system`   | 토큰, 레시피, 공용 UI 컴포넌트         | [`packages/design-system/AGENTS.md`](packages/design-system/AGENTS.md) |
+| `packages/icon`            | SVG 아이콘 컴포넌트                    | [`packages/icon/AGENTS.md`](packages/icon/AGENTS.md)                 |
 | `packages/domain`          | 파이프가 주고받는 타입과 순수 로직     | [`packages/domain/AGENTS.md`](packages/domain/AGENTS.md)             |
 | `apps/*`                   | 배포 단위 (Next.js 웹, 배포 런타임 등) | 각 앱의 `AGENTS.md`                                                  |
 | `packages/*`               | 앱이 공유하는 도메인 로직, UI, 설정    | 각 패키지의 `AGENTS.md`                                              |

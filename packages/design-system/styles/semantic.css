@@ -97,4 +97,7 @@
   --moby-elevation-overlay: 0 12px 32px oklch(15.5% 0.009 260 / 0.16);
 
   --moby-focus-ring-width: 2px;
+
+  --moby-dimension-side-navigation: 15rem;
+  --moby-dimension-side-navigation-collapsed: 3.5rem;
 }
