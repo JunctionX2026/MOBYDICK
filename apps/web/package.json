@@ -1,0 +1,31 @@
+{
+  "name": "@mobydick/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "test": "echo \"no web unit tests yet\""
+  },
+  "dependencies": {
+    "@mobydick/design-system": "workspace:*",
+    "es-toolkit": "^1.51.0",
+    "next": "16.3.2",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "react-simplikit": "^0.0.53",
+    "ts-pattern": "^5.9.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.18",
+    "@types/node": "^24.10.1",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "tailwindcss": "^4.1.18",
+    "typescript": "^5.9.3"
+  }
+}

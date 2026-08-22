@@ -1,0 +1,19 @@
+@import "tailwindcss";
+@import "@mobydick/design-system/styles.css";
+
+@source "../../../../packages/design-system/src";
+
+@layer base {
+  html {
+    color-scheme: light;
+  }
+
+  html[data-theme="dark"] {
+    color-scheme: dark;
+  }
+
+  body {
+    background-color: var(--moby-color-bg-layer-basement);
+    color: var(--moby-color-fg-neutral);
+  }
+}

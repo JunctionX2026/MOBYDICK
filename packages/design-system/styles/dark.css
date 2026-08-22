@@ -1,0 +1,80 @@
+@media (prefers-color-scheme: dark) {
+  :root {
+    --moby-color-bg-layer-default: var(--moby-color-palette-gray-1000);
+    --moby-color-bg-layer-basement: oklch(11% 0.008 260);
+    --moby-color-bg-layer-floating: var(--moby-color-palette-gray-900);
+
+    --moby-color-bg-neutral-solid: var(--moby-color-palette-gray-300);
+    --moby-color-bg-neutral-solid-pressed: var(--moby-color-palette-gray-400);
+    --moby-color-bg-neutral-weak: var(--moby-color-palette-gray-900);
+    --moby-color-bg-neutral-weak-pressed: var(--moby-color-palette-gray-800);
+    --moby-color-bg-neutral-inverted: var(--moby-color-palette-gray-100);
+    --moby-color-bg-neutral-inverted-pressed: var(--moby-color-palette-gray-200);
+
+    --moby-color-bg-brand-solid: var(--moby-color-palette-blue-500);
+    --moby-color-bg-brand-solid-pressed: var(--moby-color-palette-blue-600);
+    --moby-color-bg-brand-weak: var(--moby-color-palette-blue-1000);
+    --moby-color-bg-brand-weak-pressed: var(--moby-color-palette-blue-900);
+
+    --moby-color-bg-critical-solid: var(--moby-color-palette-red-500);
+    --moby-color-bg-critical-solid-pressed: var(--moby-color-palette-red-600);
+    --moby-color-bg-critical-weak: var(--moby-color-palette-red-1000);
+    --moby-color-bg-critical-weak-pressed: var(--moby-color-palette-red-900);
+
+    --moby-color-bg-warning-solid: var(--moby-color-palette-yellow-500);
+    --moby-color-bg-warning-solid-pressed: var(--moby-color-palette-yellow-600);
+    --moby-color-bg-warning-weak: var(--moby-color-palette-yellow-1000);
+    --moby-color-bg-warning-weak-pressed: var(--moby-color-palette-yellow-900);
+
+    --moby-color-bg-positive-solid: var(--moby-color-palette-green-500);
+    --moby-color-bg-positive-solid-pressed: var(--moby-color-palette-green-600);
+    --moby-color-bg-positive-weak: var(--moby-color-palette-green-1000);
+    --moby-color-bg-positive-weak-pressed: var(--moby-color-palette-green-900);
+
+    --moby-color-bg-informative-solid: var(--moby-color-palette-blue-400);
+    --moby-color-bg-informative-solid-pressed: var(--moby-color-palette-blue-500);
+    --moby-color-bg-informative-weak: var(--moby-color-palette-blue-1000);
+    --moby-color-bg-informative-weak-pressed: var(--moby-color-palette-blue-900);
+
+    --moby-color-bg-disabled: var(--moby-color-palette-gray-900);
+    --moby-color-bg-transparent-pressed: oklch(100% 0 0 / 0.1);
+    --moby-color-bg-overlay: oklch(0% 0 0 / 0.6);
+
+    --moby-color-fg-neutral: var(--moby-color-palette-gray-100);
+    --moby-color-fg-neutral-muted: var(--moby-color-palette-gray-400);
+    --moby-color-fg-neutral-subtle: var(--moby-color-palette-gray-500);
+    --moby-color-fg-neutral-inverted: var(--moby-color-palette-gray-1000);
+
+    --moby-color-fg-brand: var(--moby-color-palette-blue-300);
+    --moby-color-fg-brand-contrast: var(--moby-color-palette-gray-1000);
+    --moby-color-fg-critical: var(--moby-color-palette-red-300);
+    --moby-color-fg-critical-contrast: var(--moby-color-palette-gray-1000);
+    --moby-color-fg-warning: var(--moby-color-palette-yellow-300);
+    --moby-color-fg-warning-contrast: var(--moby-color-palette-gray-1000);
+    --moby-color-fg-positive: var(--moby-color-palette-green-300);
+    --moby-color-fg-positive-contrast: var(--moby-color-palette-gray-1000);
+    --moby-color-fg-informative: var(--moby-color-palette-blue-300);
+    --moby-color-fg-informative-contrast: var(--moby-color-palette-gray-1000);
+
+    --moby-color-fg-disabled: var(--moby-color-palette-gray-700);
+    --moby-color-fg-placeholder: var(--moby-color-palette-gray-500);
+
+    --moby-color-stroke-neutral-solid: var(--moby-color-palette-gray-500);
+    --moby-color-stroke-neutral-muted: var(--moby-color-palette-gray-700);
+    --moby-color-stroke-neutral-subtle: var(--moby-color-palette-gray-800);
+
+    --moby-color-stroke-brand-solid: var(--moby-color-palette-blue-500);
+    --moby-color-stroke-brand-weak: var(--moby-color-palette-blue-800);
+    --moby-color-stroke-critical-solid: var(--moby-color-palette-red-500);
+    --moby-color-stroke-critical-weak: var(--moby-color-palette-red-800);
+    --moby-color-stroke-warning-weak: var(--moby-color-palette-yellow-800);
+    --moby-color-stroke-positive-weak: var(--moby-color-palette-green-800);
+    --moby-color-stroke-informative-weak: var(--moby-color-palette-blue-800);
+
+    --moby-color-stroke-focus-ring: var(--moby-color-palette-blue-400);
+
+    --moby-elevation-raised: 0 1px 2px oklch(0% 0 0 / 0.4);
+    --moby-elevation-floating: 0 4px 12px oklch(0% 0 0 / 0.5);
+    --moby-elevation-overlay: 0 12px 32px oklch(0% 0 0 / 0.6);
+  }
+}

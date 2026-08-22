@@ -1,0 +1,57 @@
+:root {
+  --moby-color-palette-gray-00: oklch(100% 0 0);
+  --moby-color-palette-gray-100: oklch(98.4% 0.0015 260);
+  --moby-color-palette-gray-200: oklch(96.1% 0.0025 260);
+  --moby-color-palette-gray-300: oklch(92.2% 0.004 260);
+  --moby-color-palette-gray-400: oklch(87% 0.006 260);
+  --moby-color-palette-gray-500: oklch(71.5% 0.009 260);
+  --moby-color-palette-gray-600: oklch(59.5% 0.011 260);
+  --moby-color-palette-gray-700: oklch(48.5% 0.013 260);
+  --moby-color-palette-gray-800: oklch(37% 0.013 260);
+  --moby-color-palette-gray-900: oklch(26% 0.011 260);
+  --moby-color-palette-gray-1000: oklch(15.5% 0.009 260);
+
+  --moby-color-palette-blue-100: oklch(97% 0.014 245);
+  --moby-color-palette-blue-200: oklch(93.5% 0.032 245);
+  --moby-color-palette-blue-300: oklch(88% 0.058 245);
+  --moby-color-palette-blue-400: oklch(78% 0.098 246);
+  --moby-color-palette-blue-500: oklch(66% 0.142 248);
+  --moby-color-palette-blue-600: oklch(57.5% 0.165 252);
+  --moby-color-palette-blue-700: oklch(50% 0.158 254);
+  --moby-color-palette-blue-800: oklch(42% 0.132 256);
+  --moby-color-palette-blue-900: oklch(33% 0.1 258);
+  --moby-color-palette-blue-1000: oklch(24% 0.07 260);
+
+  --moby-color-palette-red-100: oklch(97% 0.014 25);
+  --moby-color-palette-red-200: oklch(93.5% 0.032 25);
+  --moby-color-palette-red-300: oklch(88% 0.062 25);
+  --moby-color-palette-red-400: oklch(78% 0.112 26);
+  --moby-color-palette-red-500: oklch(66% 0.172 27);
+  --moby-color-palette-red-600: oklch(58% 0.196 29);
+  --moby-color-palette-red-700: oklch(50.5% 0.188 29);
+  --moby-color-palette-red-800: oklch(42% 0.158 29);
+  --moby-color-palette-red-900: oklch(33% 0.12 29);
+  --moby-color-palette-red-1000: oklch(24% 0.085 29);
+
+  --moby-color-palette-green-100: oklch(97% 0.018 155);
+  --moby-color-palette-green-200: oklch(93.5% 0.04 155);
+  --moby-color-palette-green-300: oklch(88% 0.072 155);
+  --moby-color-palette-green-400: oklch(79% 0.12 155);
+  --moby-color-palette-green-500: oklch(69% 0.152 156);
+  --moby-color-palette-green-600: oklch(60% 0.144 157);
+  --moby-color-palette-green-700: oklch(51% 0.124 158);
+  --moby-color-palette-green-800: oklch(42.5% 0.104 159);
+  --moby-color-palette-green-900: oklch(33.5% 0.082 160);
+  --moby-color-palette-green-1000: oklch(24.5% 0.06 160);
+
+  --moby-color-palette-yellow-100: oklch(98% 0.022 95);
+  --moby-color-palette-yellow-200: oklch(95.5% 0.055 92);
+  --moby-color-palette-yellow-300: oklch(92% 0.098 90);
+  --moby-color-palette-yellow-400: oklch(87% 0.142 86);
+  --moby-color-palette-yellow-500: oklch(81% 0.158 80);
+  --moby-color-palette-yellow-600: oklch(72% 0.148 72);
+  --moby-color-palette-yellow-700: oklch(61% 0.134 65);
+  --moby-color-palette-yellow-800: oklch(50% 0.114 60);
+  --moby-color-palette-yellow-900: oklch(39% 0.09 58);
+  --moby-color-palette-yellow-1000: oklch(28% 0.065 56);
+}
