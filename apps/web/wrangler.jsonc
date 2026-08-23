@@ -16,6 +16,9 @@
       "migrations_dir": "migrations"
     }
   ],
+  "vars": {
+    "GOVDATA_SOURCE_URL": "https://mobydick-govdata.haklee.workers.dev"
+  },
   "observability": {
     "enabled": true
   }

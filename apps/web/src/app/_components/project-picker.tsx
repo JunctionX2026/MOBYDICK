@@ -10,6 +10,7 @@ import type { projectPickerDeleteMutation } from "@/__generated__/relay/projectP
 import type { projectPickerQuery } from "@/__generated__/relay/projectPickerQuery.graphql";
 import { ClientQuery } from "@/relay/client-query";
 import { NewProjectDialog } from "./new-project-dialog";
+import { SwishLogo } from "./swish-logo";
 
 const ProjectsQuery = graphql`
   query projectPickerQuery {
@@ -187,7 +188,7 @@ export function ProjectPicker() {
     <div className="flex flex-col gap-4">
       <header className="border-stroke-neutral-subtle bg-bg-layer-side-navigation shadow-elevation-floating flex flex-col gap-4 rounded-surface border p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
         <div className="min-w-0">
-          <p className="text-fg-neutral-muted text-xs font-semibold tracking-wide">MOBYDICK WORKSPACE</p>
+          <SwishLogo className="h-7" />
           <h1 className="text-fg-neutral mt-1 text-2xl font-semibold tracking-tight">프로젝트</h1>
           <p className="text-fg-neutral-subtle mt-1 text-sm">
             공공데이터를 찾아 연결하고, 바로 사용할 수 있는 API와 MCP로 내보내요.

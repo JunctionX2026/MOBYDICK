@@ -6,7 +6,6 @@ import {
   DatabaseFilledIcon,
   DeviceFloppyFilledIcon,
   ExternalLinkIcon,
-  MobydickMarkIcon,
   PanelLeftFilledIcon,
   PencilIcon,
   SendFilledIcon,
@@ -21,6 +20,7 @@ import { DataSourceDialog, type RecommendedDataset } from "./data-source-dialog"
 import { LiveDataDialog } from "./live-data-dialog";
 import { useWorkflow } from "./workflow-store";
 import type { GovDataOperationSpec } from "@mobydick/domain";
+import { SwishSymbol } from "@/app/_components/swish-logo";
 
 const NODE_OPTIONS: readonly NodeDialogOption[] = [
   { kind: "SOURCE", label: "데이터 소스", icon: <DatabaseFilledIcon size={20} /> },
@@ -68,7 +68,7 @@ export function ProjectNavigation({ projectId, question }: ProjectNavigationProp
             }}
             title="모든 프로젝트"
           >
-            <MobydickMarkIcon size={20} />
+            <SwishSymbol size={20} />
             <span className="group-data-[side-navigation-state=collapsed]/side-navigation:opacity-0 truncate transition-opacity">
               모든 프로젝트
             </span>

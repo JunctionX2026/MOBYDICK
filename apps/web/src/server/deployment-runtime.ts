@@ -1,6 +1,7 @@
 import { applyGovDataRequestFilters, assessGovDataRunResult, type GovDataStopSignal, type Project } from "@mobydick/domain";
 import { match } from "ts-pattern";
 import { GovDataSourceError, runGovData, serializeGovDataRunResult } from "./govdata-source";
+import { resolvePayloadSchema } from "./deployment-input";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -54,7 +55,10 @@ export function resolveDeploymentInput(project: Project, body: unknown) {
 
   return {
     requestData,
-    payloadSchema: isRecord(body.schema) ? body.schema : project.workflow.payloadSchema,
+    payloadSchema: resolvePayloadSchema(
+      isRecord(body.schema) ? body.schema : undefined,
+      project.workflow.payloadSchema,
+    ),
   };
 }
 

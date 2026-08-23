@@ -1,0 +1,10 @@
+.env
+.venv
+__pycache__
+*.pyc
+data/live_cache
+data/raw_files
+data/llm_cache
+.git
+.gitignore
+Dockerfile

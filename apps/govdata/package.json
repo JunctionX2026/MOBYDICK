@@ -2,11 +2,23 @@
   "name": "@mobydick/govdata",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "if [ -x .venv/bin/uvicorn ]; then .venv/bin/uvicorn app.server:app --host 0.0.0.0 --port 8000; else echo 'Create apps/govdata/.venv before starting GovData.' >&2; exit 1; fi",
     "build": "python3 -m compileall -q app scripts",
-    "lint": "python3 -m compileall -q app scripts",
-    "typecheck": "python3 -m compileall -q app scripts",
-    "test": "python3 -m compileall -q app scripts"
+    "lint": "python3 -m compileall -q app scripts && tsc -p tsconfig.worker.json --noEmit",
+    "typecheck": "python3 -m compileall -q app scripts && tsc -p tsconfig.worker.json --noEmit",
+    "test": "python3 -m compileall -q app scripts",
+    "preview": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260823.1",
+    "typescript": "^5.9.3",
+    "wrangler": "^4.125.0"
+  },
+  "dependencies": {
+    "@cloudflare/containers": "^0.3.7"
   }
 }

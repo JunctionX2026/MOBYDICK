@@ -29,13 +29,13 @@
 - 캔버스의 소스·조인·변환·출력 노드는 우클릭 메뉴와 상단 실행 버튼으로 실행할 수 있어요. 선택한 노드까지의 선행 소스를 하나의 REST 실행 요청으로 처리하고, 해당 단계의 행·컬럼·매칭 상세를 보여줘요.
 - 실행 요청의 선언적 payload와 검증된 response는 화면에서 확인할 수 있어요. 실시간 공공데이터 호출은 인증키를 제외한 payload·response snapshot을 로컬 cache에 저장하고, 네트워크 실패 시 명시적으로 허용된 replay 모드에서만 재사용해요.
 - 배포는 API와 MCP 두 가지 주소를 제공하고, 선택적 출력 스키마가 있으면 JSON 객체 목록을 반환해요.
+- 배포 환경에서는 FastAPI 데이터 소스를 Cloudflare Container에서 실행하고, Next.js Worker가 `GOVDATA_SOURCE_URL`을 통해 서버 간 HTTP로 호출해요.
 
 ### 안 하는 것
 
 - Next.js 또는 Cloudflare Worker 안에서 DuckDB 파일을 직접 열지 않아요.
 - 브라우저에서 데이터 소스 URL, SQL, API 키를 직접 노출하지 않아요.
 - 행을 임베딩하거나 LLM에 넘기지 않아요. 검색은 번들의 메타데이터 인덱스를 사용하고 계산은 DuckDB가 해요.
-- Cloudflare 배포를 이번 통합의 필수 경로로 만들지 않아요.
 
 ## 데이터 소스 계약
 
@@ -54,6 +54,8 @@
 | `GET/POST /api/mcp/:id` | `POST /api/run` | MCP manifest·JSON-RPC `query_project` |
 
 `GOVDATA_SOURCE_URL`은 FastAPI 서버의 origin이에요. 로컬 기본값은 `http://127.0.0.1:8000`이고, 배포 환경에서는 외부 접근 가능한 데이터 소스 origin을 명시해요.
+
+배포 환경에서 FastAPI는 DuckDB와 검색 인덱스를 포함한 Container 이미지에서 실행해요. Container의 로컬 디스크는 영속 저장소가 아니므로 실시간 API snapshot을 재시작 이후에도 보존해야 하면 별도 영속 저장소를 사용해요.
 
 검색과 추천의 `k`는 1에서 20 사이로 제한해요. 공개 프록시를 거치지 않는 직접 호출도 같은 범위를 사용해요.
 

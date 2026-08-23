@@ -4,7 +4,7 @@ import { isRecord } from "@/server/govdata-http";
 import { findProjectByDeploymentId } from "@/server/project-repository";
 
 const tool = {
-  description: "Run a deployed MOBYDICK GovData pipeline and return JSON-compatible results.",
+  description: "Run a deployed Swish GovData pipeline and return JSON-compatible results.",
   inputSchema: {
     additionalProperties: false,
     properties: {
@@ -39,7 +39,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 
   return Response.json({
     deploymentId: id,
-    name: "MOBYDICK GovData MCP",
+    name: "Swish GovData MCP",
     transport: "POST JSON-RPC",
     tools: [tool],
   });
@@ -77,7 +77,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       return jsonRpc(rpcId, {
         capabilities: { tools: {} },
         protocolVersion: "2025-06-18",
-        serverInfo: { name: "MOBYDICK GovData", version: "0.1.0" },
+        serverInfo: { name: "Swish GovData", version: "0.1.0" },
       });
     }
 

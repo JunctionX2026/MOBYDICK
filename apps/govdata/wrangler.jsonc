@@ -1,0 +1,39 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "mobydick-govdata",
+  "main": "worker.ts",
+  "compatibility_date": "2026-08-23",
+  "containers": [
+    {
+      "class_name": "GovDataContainer",
+      "image": "./Dockerfile",
+      "instance_type": "standard-1",
+      "max_instances": 1
+    }
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "GOVDATA_CONTAINER",
+        "class_name": "GovDataContainer"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["GovDataContainer"]
+    }
+  ],
+  "vars": {
+    "GOVDATA_AI_ENABLED": "false",
+    "GOVDATA_AI_PROVIDER": "openai",
+    "GOVDATA_LIVE_CACHE_ENABLED": "true",
+    "GOVDATA_LIVE_REPLAY": "false",
+    "GOVDATA_OPENAI_TIMEOUT_SECONDS": "30",
+    "LIVE_API_TIMEOUT_SECONDS": "30"
+  },
+  "observability": {
+    "enabled": true
+  }
+}
