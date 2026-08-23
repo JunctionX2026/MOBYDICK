@@ -23,13 +23,7 @@ cp apps/govdata/.env.example apps/govdata/.env
 # apps/govdata/.env에 DATA_GO_KR_KEY 값을 로컬에서 입력해요.
 ```
 
-AI 플래너는 FastAPI에서만 실행해요. Codex ChatGPT OAuth를 사용하려면 같은 운영체제 사용자로 Codex CLI가 로그인되어 있는지 확인해요.
-
-```bash
-codex login status
-```
-
-FastAPI가 로컬 Codex CLI의 `codex exec --ephemeral --json --sandbox read-only`를 호출하고, CLI가 ChatGPT OAuth 세션을 관리해요. 앱은 OAuth 토큰을 읽거나 브라우저에 전달하지 않아요. 해커톤 동안에는 외부 요청에서도 이 planner를 허용하지만, 공개 URL을 닫으면 `GOVDATA_AI_ENABLED=false`로 끌 수 있어요. Codex를 사용할 수 없으면 검증된 결정적 추천으로 폴백해요.
+AI 플래너는 FastAPI에서만 실행해요. OpenAI API 키와 모델 설정은 `apps/govdata/.env` 또는 배포 비밀 저장소에만 둬요. 키는 웹 앱이나 브라우저에 전달하지 않아요. 공개 URL을 닫으면 `GOVDATA_AI_ENABLED=false`로 끌 수 있고, OpenAI planner를 사용할 수 없으면 검증된 결정적 추천으로 폴백해요.
 
 ## 실행
 
@@ -39,8 +33,10 @@ FastAPI가 로컬 Codex CLI의 `codex exec --ephemeral --json --sandbox read-onl
 # 터미널 1: DuckDB/RAG 데이터 소스
 cd apps/govdata
 GOVDATA_AI_ENABLED=true \
-GOVDATA_AI_PROVIDER=codex \
-GOVDATA_CODEX_TIMEOUT_SECONDS=120 \
+GOVDATA_AI_PROVIDER=openai \
+OPENAI_API_MODEL=gpt-5.6-luna \
+OPENAI_REASONING_EFFORT=low \
+GOVDATA_OPENAI_TIMEOUT_SECONDS=30 \
 .venv/bin/uvicorn app.server:app --host 0.0.0.0 --port 8000
 ```
 
@@ -58,9 +54,9 @@ pnpm --filter @mobydick/web exec next dev --hostname 0.0.0.0
 ngrok http 3000
 ```
 
-ngrok은 Next.js 포트만 공개해요. 브라우저는 `/api/govdata/*`를 호출하고, Next.js 서버가 로컬 `127.0.0.1:8000`의 FastAPI로 전달해요. DuckDB 서버 포트 8000을 별도로 공개하지 않아요. 해커톤 기간에는 공개 URL에서 FastAPI의 Codex planner가 실행되므로 외부 요청마다 Codex 사용량이 발생할 수 있어요. OAuth 토큰은 FastAPI와 Codex CLI 밖으로 전달하지 않아요.
+ngrok은 Next.js 포트만 공개해요. 브라우저는 `/api/govdata/*`를 호출하고, Next.js 서버가 로컬 `127.0.0.1:8000`의 FastAPI로 전달해요. DuckDB 서버 포트 8000을 별도로 공개하지 않아요. 공개 URL에서 FastAPI의 OpenAI planner가 실행되므로 외부 요청마다 OpenAI 사용량이 발생할 수 있어요. API 키는 FastAPI 밖으로 전달하지 않아요.
 
-프로젝트 상단의 `배포`에서 API 또는 MCP 주소를 만들어요. API 주소는 `POST /api/deployments/:deploymentId`에 `{"query":"...","schema":{...}}`를 보내고, MCP 주소는 JSON-RPC `tools/call`의 `query_project`를 사용해요. `schema.properties`의 각 항목은 결과 컬럼을 `column` 또는 `from`으로 지정해 JSON 객체 목록을 만들어요.
+프로젝트 상단의 `배포`에서 API 또는 MCP 주소를 만들어요. API 주소는 `POST /api/deployments/:deploymentId`에 `{"request":{...},"schema":{...}}`를 보내고, MCP 주소는 JSON-RPC `tools/call`의 `query_project`를 사용해요. `schema.properties`의 각 항목은 결과 컬럼을 `column` 또는 `from`으로 지정해 JSON 객체 목록을 만들어요.
 
 배포용 환경 변수는 [`.env.example`](../apps/web/.env.example)의 이름만 참고해요. 비밀값은 커밋하거나 브라우저 코드에 넣지 않아요.
 
@@ -82,7 +78,7 @@ curl -s -X POST http://localhost:3000/api/govdata/plan \
 
 curl -s -X POST http://localhost:3000/api/deployments/<deployment-id> \
   -H 'content-type: application/json' \
-  -d '{"query":"시군별 노인복지시설과 병의원 수","schema":{"type":"object","properties":{"region":{"column":"key"}}}}'
+  -d '{"request":{"region":"포항시"},"schema":{"type":"object","properties":{"region":{"column":"key"}}}}'
 ```
 
 데이터 소스가 꺼져 있으면 웹 앱은 빈 목록을 보여주지 않고 연결 실패 이유를 표시해요. `/api/govdata/plan`은 AI를 사용하더라도 메타데이터와 조인 가능성만 모델에 보내고, 실제 숫자 계산은 항상 DuckDB에서 수행해요.

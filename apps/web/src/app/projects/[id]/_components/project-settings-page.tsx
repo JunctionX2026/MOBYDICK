@@ -2,6 +2,7 @@
 
 import { Button, Callout, Input, Skeleton, Spinner, Textarea } from "@mobydick/design-system";
 import { ArrowRightIcon } from "@mobydick/icon";
+import { deriveGovDataOutputColumns, parseGovDataOperationSpec } from "@mobydick/domain";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
@@ -33,6 +34,7 @@ const ProjectSettingsQuery = graphql`
           id
           source
           target
+          intent
         }
         operationSpecJson
         requestDataJson
@@ -80,6 +82,28 @@ function parseJsonObject(text: string, label: string, allowBlank = false) {
   }
 }
 
+function isRequestFilterValue(value: unknown): boolean {
+  if (Array.isArray(value)) {
+    return value.every((item) => isRequestFilterValue(item) && !Array.isArray(item));
+  }
+
+  return typeof value === "string" || typeof value === "boolean" || (typeof value === "number" && Number.isFinite(value));
+}
+
+function validateRequestData(value: Record<string, unknown>): string | null {
+  if (value.filters === undefined) {
+    return null;
+  }
+
+  if (!isJsonObject(value.filters)) {
+    return "요청 데이터의 filters는 JSON 객체여야 해요.";
+  }
+
+  return Object.entries(value.filters).every(([, filterValue]) => isRequestFilterValue(filterValue))
+    ? null
+    : "요청 데이터의 filters 값은 문자열, 숫자, 불리언 또는 그 배열이어야 해요.";
+}
+
 function jsonText(value: string | null, fallback: Record<string, unknown> | null) {
   if (value == null || value.trim() === "") {
     return fallback == null ? "" : JSON.stringify(fallback, null, 2);
@@ -90,6 +114,20 @@ function jsonText(value: string | null, fallback: Record<string, unknown> | null
     return JSON.stringify(parsed, null, 2);
   } catch {
     return value;
+  }
+}
+
+function storedOutputColumns(value: string | null | undefined): string[] {
+  if (value == null || value.trim() === "") {
+    return [];
+  }
+
+  try {
+    const parsed: unknown = JSON.parse(value);
+    const spec = parseGovDataOperationSpec(parsed);
+    return spec == null ? [] : deriveGovDataOutputColumns(spec);
+  } catch {
+    return [];
   }
 }
 
@@ -135,6 +173,8 @@ function SettingsContent({ projectId }: { projectId: string }) {
     );
   }
 
+  const outputColumns = storedOutputColumns(project.workflow.operationSpecJson);
+
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const trimmedName = name.trim();
@@ -148,6 +188,18 @@ function SettingsContent({ projectId }: { projectId: string }) {
 
     if (typeof parsedRequestData === "string") {
       setError(parsedRequestData);
+      return;
+    }
+
+    if (parsedRequestData == null) {
+      setError("요청 데이터 JSON을 확인해 주세요.");
+      return;
+    }
+
+    const requestError = validateRequestData(parsedRequestData);
+
+    if (requestError != null) {
+      setError(requestError);
       return;
     }
 
@@ -210,7 +262,7 @@ function SettingsContent({ projectId }: { projectId: string }) {
           <span className="bg-bg-layer-floating text-fg-neutral-muted shrink-0 rounded-pill px-3 py-1 text-xs">API · MCP</span>
         </header>
 
-        <form className="border-stroke-neutral-muted bg-bg-layer-floating shadow-elevation-floating flex flex-col gap-6 rounded-surface border p-5 sm:p-6" onSubmit={submit}>
+        <form className="border-stroke-neutral-subtle bg-bg-layer-side-navigation shadow-elevation-floating flex flex-col gap-6 rounded-surface border p-5 sm:p-6" onSubmit={submit}>
           <label className="flex flex-col gap-1.5">
             <span className="text-fg-neutral text-sm font-medium">프로젝트 이름</span>
             <Input disabled={saving} onChange={(event) => setName(event.target.value)} value={name} />
@@ -218,7 +270,7 @@ function SettingsContent({ projectId }: { projectId: string }) {
 
           <label className="flex flex-col gap-1.5">
             <span className="text-fg-neutral text-sm font-medium">요청 데이터 기본값 (JSON)</span>
-            <span className="text-fg-neutral-muted text-xs">배포 API와 MCP 호출에 사용할 기본 요청 객체예요.</span>
+            <span className="text-fg-neutral-muted text-xs">배포 API와 MCP 호출에 사용할 기본 요청 객체예요. `filters`를 넣으면 payload 필드에 연결된 결과 행만 반환해요.</span>
             <Textarea
               className="min-h-44 font-mono text-xs"
               disabled={saving}
@@ -227,6 +279,24 @@ function SettingsContent({ projectId }: { projectId: string }) {
               value={requestData}
             />
           </label>
+
+          {outputColumns.length > 0 && (
+            <Callout tone="neutral">
+              <Callout.Content>
+                <Callout.Title>현재 파이프라인 결과 컬럼</Callout.Title>
+                <Callout.Description>
+                  payload schema의 `column` 또는 `from` 값은 아래 컬럼명과 일치해야 해요. 바깥 property 이름은 원하는 JSON 필드명으로 지정할 수 있어요.
+                </Callout.Description>
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {outputColumns.map((column) => (
+                    <code className="bg-bg-layer-default text-fg-neutral rounded-control px-2 py-1 text-xs" key={column}>
+                      {column}
+                    </code>
+                  ))}
+                </div>
+              </Callout.Content>
+            </Callout>
+          )}
 
           <label className="flex flex-col gap-1.5">
             <span className="text-fg-neutral text-sm font-medium">payload 스키마 (JSON)</span>
@@ -245,7 +315,7 @@ function SettingsContent({ projectId }: { projectId: string }) {
             <Callout tone="warning">
               <Callout.Content>
                 <Callout.Title>아직 저장된 실행 파이프라인이 없어요</Callout.Title>
-                <Callout.Description>캔버스에서 질문 분석이 끝난 뒤 저장하면 API와 MCP가 같은 파이프라인을 실행해요.</Callout.Description>
+              <Callout.Description>캔버스에서 질문 기반 조인·변환을 검토한 뒤 저장하면 API와 MCP가 같은 파이프라인을 실행해요.</Callout.Description>
               </Callout.Content>
             </Callout>
           )}
@@ -269,5 +339,5 @@ function SettingsContent({ projectId }: { projectId: string }) {
 }
 
 export function ProjectSettingsPage({ projectId }: { projectId: string }) {
-  return <ClientQuery fallback={<SettingsSkeleton />}><SettingsContent projectId={projectId} /></ClientQuery>;
+  return <ClientQuery fallback={<SettingsSkeleton />}><SettingsContent key={projectId} projectId={projectId} /></ClientQuery>;
 }

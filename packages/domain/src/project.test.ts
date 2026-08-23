@@ -31,7 +31,7 @@ describe("parseWorkflow", () => {
   it("keeps a canvas that links two of its own nodes", () => {
     const workflow = {
       nodes: [node("a"), node("b")],
-      links: [{ id: "l1", source: "a", target: "b" }],
+      links: [{ id: "l1", intent: null, source: "a", target: "b" }],
     };
 
     expect(parseWorkflow(workflow)).toEqual(workflow);

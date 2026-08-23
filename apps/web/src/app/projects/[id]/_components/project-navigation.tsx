@@ -5,12 +5,12 @@ import {
   AffiliateFilledIcon,
   DatabaseFilledIcon,
   DeviceFloppyFilledIcon,
+  ExternalLinkIcon,
   MobydickMarkIcon,
   PanelLeftFilledIcon,
   PencilIcon,
   SendFilledIcon,
   SitemapFilledIcon,
-  TransformFilledIcon,
 } from "@mobydick/icon";
 import Link from "next/link";
 import type { Route } from "next";
@@ -18,17 +18,18 @@ import { useState } from "react";
 import { match } from "ts-pattern";
 import { ConnectDialog, NodeDialog, type NodeDialogOption } from "./workflow-dialog";
 import { DataSourceDialog, type RecommendedDataset } from "./data-source-dialog";
+import { LiveDataDialog } from "./live-data-dialog";
 import { useWorkflow } from "./workflow-store";
+import type { GovDataOperationSpec } from "@mobydick/domain";
 
 const NODE_OPTIONS: readonly NodeDialogOption[] = [
   { kind: "SOURCE", label: "데이터 소스", icon: <DatabaseFilledIcon size={20} /> },
-  { kind: "TRANSFORM", label: "변환", icon: <TransformFilledIcon size={20} /> },
-  { kind: "JOIN", label: "조인", icon: <AffiliateFilledIcon size={20} /> },
+  { kind: "OPERATION", label: "조인·변환", icon: <AffiliateFilledIcon size={20} /> },
   { kind: "OUTPUT", label: "출력", icon: <SendFilledIcon size={20} /> },
 ];
 
 const sideNavigationCardClassName =
-  "m-4 h-[calc(100%-2rem)] rounded-surface border border-stroke-neutral-muted shadow-elevation-raised";
+  "m-4 h-[calc(100%-2rem)] rounded-surface border border-stroke-neutral-subtle shadow-elevation-raised";
 
 export interface ProjectNavigationProps {
   name: string;
@@ -41,6 +42,7 @@ export function ProjectNavigation({ projectId, question }: ProjectNavigationProp
   const [nodeDialogOpen, setNodeDialogOpen] = useState(false);
   const [connectDialogOpen, setConnectDialogOpen] = useState(false);
   const [dataSourceDialogOpen, setDataSourceDialogOpen] = useState(false);
+  const [liveDataDialogOpen, setLiveDataDialogOpen] = useState(false);
 
   const handleAddNode = (kind: typeof NODE_OPTIONS[number]["kind"]) => {
     if (kind === "SOURCE") {
@@ -93,6 +95,13 @@ export function ProjectNavigation({ projectId, question }: ProjectNavigationProp
             >
               <SideNavigation.ItemPrefixIcon svg={<AffiliateFilledIcon size={20} />} />
               <SideNavigation.ItemLabel>연결</SideNavigation.ItemLabel>
+            </SideNavigation.Item>
+            <SideNavigation.Item
+              onClick={() => setLiveDataDialogOpen(true)}
+              title="실시간 API 호출"
+            >
+              <SideNavigation.ItemPrefixIcon svg={<ExternalLinkIcon size={20} />} />
+              <SideNavigation.ItemLabel>실시간 호출</SideNavigation.ItemLabel>
             </SideNavigation.Item>
           </SideNavigation.Group>
 
@@ -156,15 +165,17 @@ export function ProjectNavigation({ projectId, question }: ProjectNavigationProp
         open={dataSourceDialogOpen}
         question={question}
       />
+      <LiveDataDialog onOpenChange={setLiveDataDialogOpen} open={liveDataDialogOpen} />
       <ConnectDialog
         nodes={nodes}
-        onConnect={(source, target) => {
+        onConnect={(source, target, intent, spec: GovDataOperationSpec) => {
           if (rejectionFor(source, target) == null) {
-            connect(source, target);
+            connect(source, target, intent, spec);
           }
         }}
         onOpenChange={setConnectDialogOpen}
         open={connectDialogOpen}
+        question={question}
         rejectionFor={rejectionFor}
       />
     </>

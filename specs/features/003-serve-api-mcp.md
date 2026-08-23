@@ -18,9 +18,13 @@
 
 - 워크플로를 고정 엔드포인트로 배포해요. 이게 기본값이에요.
 - 프로젝트 설정에서 요청 기본값과 응답 payload 스키마를 JSON으로 저장해요.
+- 프로젝트 설정에서 저장된 `OperationSpec`으로 예상 결과 컬럼을 보여주고, schema 매핑에 사용할 컬럼명을 안내해요.
+- `request.filters`가 있으면 응답 payload 스키마의 필드와 연결해 결과 행을 좁혀요.
 - 배포된 API는 저장된 `OperationSpec`을 다시 planner에 보내지 않고 그대로 실행해요.
 - API와 MCP 주소는 배포 모달을 열면 동시에 만들고 각각 복사할 수 있어요.
+- 배포 모달에서 API의 \`{ request, schema }\`와 MCP \`tools/call\`의 최소 호출 예시를 확인해요.
 - MCP는 HTTP JSON-RPC 도구로 노출해요.
+- API와 MCP의 `request`, `schema` 입력은 JSON 객체여야 하고, 계약에 없는 입력은 거부해요.
 
 ### 안 하는 것
 
@@ -33,7 +37,8 @@
 1. 프로젝트 설정에서 요청 기본값과 payload 스키마를 입력하고 저장해요.
 2. 배포 모달을 열면 API와 MCP 고정 엔드포인트가 생겨요.
 3. API 또는 MCP 요청의 `schema`가 있으면 저장된 payload 스키마보다 우선해요.
-4. 저장된 `OperationSpec`을 실행하고 표 결과와 JSON output을 반환해요.
+4. 요청의 `filters`가 있으면 payload 필드명 또는 결과 컬럼명으로 결과 행을 필터링해요.
+5. 저장된 `OperationSpec`을 실행하고 표 결과와 JSON output을 반환해요.
 
 사용자가 만든 파이프라인이 새로운 공공데이터 MCP가 돼요. 공공데이터 → 이 플랫폼 → 새 MCP → AI가 사용. 루프가 닫혀요.
 
@@ -44,11 +49,16 @@
 ## 인수 기준
 
 - [x] 배포 모달을 열면 API와 MCP 주소가 모두 보이고 각각 복사할 수 있어요.
+- [x] 배포 모달에서 API와 MCP의 최소 호출 body 형식이 보여요.
 - [x] API를 호출하면 planner를 다시 호출하지 않고 저장된 `OperationSpec`이 실행돼요.
 - [x] 요청 schema 없이 호출하면 프로젝트 설정의 payload 스키마로 JSON output을 만들어요.
 - [x] API 또는 MCP 요청의 schema를 주면 그 스키마로 JSON output을 만들어요.
+- [x] 프로젝트 설정에서 현재 파이프라인의 결과 컬럼과 schema 매핑 규칙을 확인할 수 있어요.
+- [x] `request.filters`가 API와 MCP 결과의 행에 적용되고, 알 수 없는 필드는 오류로 알려요.
 - [x] MCP로 노출한 워크플로를 MCP 클라이언트에서 `query_project` 도구로 호출할 수 있어요.
 - [x] 원본 데이터 응답이 실패하면 조용히 빈 결과를 주지 않고 오류로 알려요.
+- [x] API와 MCP가 배열형 `request`·`schema`와 알 수 없는 입력을 오류로 알려요.
+- [x] 실행 결과가 0행, 매칭률 50% 미만, 결측률 20% 초과이면 API와 MCP가 정지 이유를 오류로 알려요.
 
 ## 실패와 정지 조건
 

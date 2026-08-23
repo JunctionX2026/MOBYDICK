@@ -177,7 +177,7 @@ function renderResult(res, title) {
       <h3>${d.title}</h3>
       <div class="meta">${d.keys} keys · ${d.matched} matched · ${d.dropped} dropped</div>
       <div class="bar"><i style="width:${Math.round(d.match_rate*100)}%"></i></div>
-      <div class="meta">${Math.round(d.match_rate*100)}% match${d.dropped_keys.length ? ` · dropped: ${d.dropped_keys.slice(0,8).join(", ")}${d.dropped_keys.length > 8 ? " …" : ""}` : ""}</div>
+      <div class="meta">${Math.round(d.match_rate*100)}% match · reason: ${d.reason_code === "missing_normalized_key" ? "normalization key missing" : d.reason_code === "unmatched_normalized_key" ? "normalized key unmatched" : "join key mismatch"}${d.dropped_keys.length ? ` · dropped: ${d.dropped_keys.slice(0,8).join(", ")}${d.dropped_keys.length > 8 ? " …" : ""}` : ""}</div>
     </div>`).join("");
   $("#out").innerHTML = `
     <h2>Result · ${res.row_count} rows${title ? " · " + title : ""}</h2>

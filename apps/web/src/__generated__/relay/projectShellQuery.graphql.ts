@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<035787c384935d42b275860c37323ef5>>
+ * @generated SignedSource<<b8d177a5f0172e9c65cf67f38041a031>>
  * @lightSyntaxTransform
  */
 
@@ -9,7 +9,7 @@
 
 import { ConcreteRequest } from 'relay-runtime';
 export type ProjectPhase = "COMPOSE" | "DISCOVER" | "SERVE" | "%future added value";
-export type WorkflowNodeKind = "JOIN" | "OUTPUT" | "SOURCE" | "TRANSFORM" | "%future added value";
+export type WorkflowNodeKind = "OPERATION" | "OUTPUT" | "SOURCE" | "%future added value";
 export type projectShellQuery$variables = {
   id: string;
 };
@@ -22,6 +22,7 @@ export type projectShellQuery$data = {
     readonly workflow: {
       readonly links: ReadonlyArray<{
         readonly id: string;
+        readonly intent: string | null | undefined;
         readonly source: string;
         readonly target: string;
       }>;
@@ -194,6 +195,13 @@ v2 = [
                 "kind": "ScalarField",
                 "name": "target",
                 "storageKey": null
+              },
+              {
+                "alias": null,
+                "args": null,
+                "kind": "ScalarField",
+                "name": "intent",
+                "storageKey": null
               }
             ],
             "storageKey": null
@@ -244,16 +252,16 @@ return {
     "selections": (v2/*:: as any*/)
   },
   "params": {
-    "cacheID": "e997d9becea7505269ef10ae3165a2d7",
+    "cacheID": "6ecb69410b22d4f709781f6bdac537c9",
     "id": null,
     "metadata": {},
     "name": "projectShellQuery",
     "operationKind": "query",
-    "text": "query projectShellQuery(\n  $id: ID!\n) {\n  project(id: $id) {\n    id\n    name\n    question\n    phase\n    workflow {\n      nodes {\n        id\n        kind\n        title\n        subtitle\n        datasetId\n        position {\n          x\n          y\n        }\n      }\n      links {\n        id\n        source\n        target\n      }\n      operationSpecJson\n      requestDataJson\n      payloadSchemaJson\n    }\n  }\n}\n"
+    "text": "query projectShellQuery(\n  $id: ID!\n) {\n  project(id: $id) {\n    id\n    name\n    question\n    phase\n    workflow {\n      nodes {\n        id\n        kind\n        title\n        subtitle\n        datasetId\n        position {\n          x\n          y\n        }\n      }\n      links {\n        id\n        source\n        target\n        intent\n      }\n      operationSpecJson\n      requestDataJson\n      payloadSchemaJson\n    }\n  }\n}\n"
   }
 };
 })();
 
-(node as any).hash = "b7f2d8df64cba0f0bc58f3b3de3c4240";
+(node as any).hash = "3c2155a35a239962edd0d31a5e41a285";
 
 export default node;

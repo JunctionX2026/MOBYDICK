@@ -17,6 +17,7 @@ const storedSpec = {
 
 const link = (source: string, target: string): WorkflowLink => ({
   id: `${source}-${target}`,
+  intent: null,
   source,
   target,
 });
@@ -52,6 +53,41 @@ describe("linkRejection", () => {
 });
 
 describe("parseWorkflow", () => {
+  const nodes = [
+    {
+      id: "a",
+      kind: "source",
+      title: "Source",
+      subtitle: null,
+      datasetId: "dataset_1",
+      position: { x: 0, y: 0 },
+    },
+    {
+      id: "b",
+      kind: "output",
+      title: "Output",
+      subtitle: null,
+      datasetId: null,
+      position: { x: 200, y: 0 },
+    },
+  ];
+
+  it("rejects duplicate node and link ids", () => {
+    expect(parseWorkflow({ nodes: [...nodes, nodes[0]], links: [] })).toBeNull();
+    expect(
+      parseWorkflow({
+        nodes,
+        links: [link("a", "b"), { ...link("a", "b"), id: "a-b-copy" }],
+      }),
+    ).toBeNull();
+    expect(
+      parseWorkflow({
+        nodes,
+        links: [link("a", "b"), { ...link("a", "b"), source: "b", target: "a" }],
+      }),
+    ).toBeNull();
+  });
+
   it("keeps stored execution settings at the workflow boundary", () => {
     expect(
       parseWorkflow({

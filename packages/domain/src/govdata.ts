@@ -96,6 +96,19 @@ export interface GovDataOperationSpec {
   limit: number;
 }
 
+export interface GovDataJoinConditionSource {
+  alias: string;
+  datasetId: string;
+  column: string | null;
+  level: GovDataJoinLevel | null;
+}
+
+export interface GovDataJoinCondition {
+  mode: "inner" | "left" | "single";
+  levels: GovDataJoinLevel[];
+  sources: GovDataJoinConditionSource[];
+}
+
 export interface GovDataJoinLink {
   sourceDatasetId: string;
   targetDatasetId: string;
@@ -135,18 +148,154 @@ export interface GovDataDropDetail {
   matchRate: number;
   dropped: number;
   droppedKeys: string[];
+  reasonCode: GovDataDropReason | null;
 }
+
+export type GovDataDropReason = "missing_normalized_key" | "unmatched_normalized_key";
 
 export interface GovDataRunResult {
   columns: string[];
   rows: unknown[][];
   rowCount: number;
+  nullRate: number;
   sources: Array<{ alias: string; datasetId: string; title: string }>;
   droppedDetail: GovDataDropDetail[];
   output?: unknown;
 }
 
-export type GovDataPipelineNodeKind = "SOURCE" | "TRANSFORM" | "JOIN" | "OUTPUT";
+export function applyGovDataRequestFilters(
+  result: GovDataRunResult,
+  filters: Record<string, unknown>,
+  schema?: Record<string, unknown>,
+): GovDataRunResult {
+  const properties = schema == null ? null : isRecord(schema.properties) ? schema.properties : null;
+
+  if (schema != null && properties == null) {
+    throw new Error("payload schema properties must be an object");
+  }
+
+  const predicates = Object.entries(filters).map(([name, expected]) => {
+    const definition = properties == null ? undefined : properties[name];
+    const column =
+      definition == null
+        ? name
+        : isRecord(definition) && typeof (definition.column ?? definition.from) === "string"
+          ? (definition.column ?? definition.from) as string
+          : null;
+
+    if (column == null || !result.columns.includes(column)) {
+      throw new Error(`unknown request filter field: ${name}`);
+    }
+
+    const values = Array.isArray(expected) ? expected : [expected];
+
+    if (!values.every((value) => typeof value === "string" || (typeof value === "number" && Number.isFinite(value)) || typeof value === "boolean")) {
+      throw new Error(`request filter value is invalid: ${name}`);
+    }
+
+    const index = result.columns.indexOf(column);
+
+    return (row: unknown[]) =>
+      values.some((value) => {
+        const actual = row[index];
+
+        if (typeof actual === "string" && typeof value === "string") {
+          return actual === value || actual.startsWith(`${value}|`);
+        }
+
+        return Object.is(actual, value);
+      });
+  });
+
+  const selected = result.rows
+    .map((row, index) => ({ index, row }))
+    .filter(({ row }) => predicates.every((predicate) => predicate(row)));
+  const outputRows = Array.isArray(result.output) ? result.output : null;
+  const selectedRows = selected.map(({ row }) => row);
+  const nullCells = selectedRows.reduce<number>(
+    (total, row) => total + row.reduce<number>((count, value) => count + (value == null ? 1 : 0), 0),
+    0,
+  );
+  const cellCount = selectedRows.length * result.columns.length;
+
+  return {
+    ...result,
+    rows: selectedRows,
+    rowCount: selectedRows.length,
+    nullRate: cellCount === 0 ? 0 : Number((nullCells / cellCount).toFixed(4)),
+    ...(outputRows == null ? {} : { output: selected.map(({ index }) => outputRows[index]) }),
+  };
+}
+
+export const GOVDATA_STOP_THRESHOLDS = {
+  maximumNullRate: 0.2,
+  minimumMatchRate: 0.5,
+  minimumRowRetention: 0.5,
+} as const;
+
+export type GovDataStopReason = "empty_result" | "row_drop" | "match_rate" | "null_rate";
+
+export interface GovDataStopSignal {
+  reason: GovDataStopReason;
+  observed: number;
+  threshold: number;
+  title?: string;
+}
+
+export interface GovDataQualityOptions {
+  allowPartialMatch?: boolean;
+}
+
+/** Applies the shared quality gate before a result is allowed to continue downstream. */
+export function assessGovDataRunResult(
+  result: GovDataRunResult,
+  baselineRowCount?: number,
+  options: GovDataQualityOptions = {},
+): GovDataStopSignal | null {
+  if (result.rowCount === 0) {
+    return { observed: 0, reason: "empty_result", threshold: 1 };
+  }
+
+  if (
+    baselineRowCount != null &&
+    baselineRowCount > 0 &&
+    result.rowCount / baselineRowCount < GOVDATA_STOP_THRESHOLDS.minimumRowRetention
+  ) {
+    return {
+      observed: result.rowCount / baselineRowCount,
+      reason: "row_drop",
+      threshold: GOVDATA_STOP_THRESHOLDS.minimumRowRetention,
+    };
+  }
+
+  const lowestMatch = result.droppedDetail.reduce<number | null>(
+    (lowest, detail) => (lowest == null ? detail.matchRate : Math.min(lowest, detail.matchRate)),
+    null,
+  );
+
+  if (!options.allowPartialMatch && lowestMatch != null && lowestMatch < GOVDATA_STOP_THRESHOLDS.minimumMatchRate) {
+    const failedDetail = result.droppedDetail.find((detail) => detail.matchRate === lowestMatch);
+
+    return {
+      observed: lowestMatch,
+      reason: "match_rate",
+      threshold: GOVDATA_STOP_THRESHOLDS.minimumMatchRate,
+      ...(failedDetail == null ? {} : { title: failedDetail.title }),
+    };
+  }
+
+  if (result.nullRate > GOVDATA_STOP_THRESHOLDS.maximumNullRate) {
+    return {
+      observed: result.nullRate,
+      reason: "null_rate",
+      threshold: GOVDATA_STOP_THRESHOLDS.maximumNullRate,
+    };
+  }
+
+  return null;
+}
+
+export type GovDataPipelineNodeKind = "SOURCE" | "OPERATION" | "OUTPUT";
 
 export interface GovDataPipelineNode {
   id: string;
@@ -159,11 +308,11 @@ export interface GovDataPipelineNode {
 
 export interface GovDataPipeline {
   nodes: GovDataPipelineNode[];
-  links: Array<{ id: string; source: string; target: string }>;
+  links: Array<{ id: string; source: string; target: string; intent: string | null }>;
 }
 
 export interface GovDataPlan {
-  planner: "codex" | "fallback";
+  planner: "openai" | "fallback";
   plannerError?: string;
   title: string;
   explanation: string;
@@ -184,7 +333,7 @@ export interface GovDataStats {
 export interface GovDataLiveService {
   service: string;
   name: string;
-  endpoint: string;
+  endpoint?: string;
   defaultOperation: string | null;
   operations: string[];
   requiredParams: string[];
@@ -198,7 +347,7 @@ export interface GovDataLiveCatalog {
 export interface GovDataLiveResult {
   service: string;
   operation: string | null;
-  endpoint: string;
+  endpoint?: string;
   payload: Record<string, unknown>;
   statusCode: number;
   contentType: string;
@@ -615,6 +764,27 @@ export function parseGovDataOperationSpec(value: unknown): GovDataOperationSpec 
   return { sources, ...(join == null ? {} : { join }), orderBy, limit };
 }
 
+export function deriveGovDataJoinCondition(spec: GovDataOperationSpec): GovDataJoinCondition {
+  const levels: GovDataJoinLevel[] = [];
+
+  for (const source of spec.sources) {
+    if (source.key != null && !levels.includes(source.key.level)) {
+      levels.push(source.key.level);
+    }
+  }
+
+  return {
+    mode: spec.sources.length < 2 ? "single" : spec.join ?? "inner",
+    levels,
+    sources: spec.sources.map((source) => ({
+      alias: source.alias,
+      datasetId: source.datasetId,
+      column: source.key?.column ?? null,
+      level: source.key?.level ?? null,
+    })),
+  };
+}
+
 export function serializeGovDataOperationSpec(spec: GovDataOperationSpec) {
   return {
     sources: spec.sources.map((source) => ({
@@ -639,6 +809,31 @@ export function serializeGovDataOperationSpec(spec: GovDataOperationSpec) {
     order_by: spec.orderBy.map((order) => ({ name: order.name, desc: order.descending })),
     limit: spec.limit,
   };
+}
+
+export function deriveGovDataOutputColumns(spec: GovDataOperationSpec): string[] {
+  const columns = new Set<string>();
+  const isJoin = spec.sources.length > 1;
+
+  for (const source of spec.sources) {
+    if (source.columns != null && source.metrics.length === 0) {
+      source.columns.forEach((column) => columns.add(column));
+      continue;
+    }
+
+    if (source.key != null) {
+      columns.add(isJoin ? "key" : "k");
+    }
+
+    source.groupBy.forEach((column) => columns.add(column));
+    if (source.metrics.length === 0) {
+      columns.add(`${source.alias}_rows`);
+    } else {
+      source.metrics.forEach((metric) => columns.add(metric.name));
+    }
+  }
+
+  return [...columns];
 }
 
 function parseJoinLink(value: unknown): GovDataJoinLink | null {
@@ -741,6 +936,11 @@ function parseDropDetail(value: unknown): GovDataDropDetail | null {
   const matchRate = finiteNumber(value.match_rate);
   const dropped = nonNegativeNumber(value.dropped);
   const droppedKeys = stringArray(value.dropped_keys);
+  const reasonCodeValue = Object.hasOwn(value, "reason_code") ? value.reason_code : undefined;
+  const reasonCode = reasonCodeValue == null ? null : oneOf(reasonCodeValue, [
+    "missing_normalized_key",
+    "unmatched_normalized_key",
+  ] as const);
 
   if (
     alias == null ||
@@ -750,12 +950,14 @@ function parseDropDetail(value: unknown): GovDataDropDetail | null {
     matched == null ||
     matchRate == null ||
     dropped == null ||
-    droppedKeys == null
+    droppedKeys == null ||
+    reasonCodeValue === undefined ||
+    (reasonCodeValue != null && reasonCode == null)
   ) {
     return null;
   }
 
-  return { alias, datasetId, title, keys, matched, matchRate, dropped, droppedKeys };
+  return { alias, datasetId, title, keys, matched, matchRate, dropped, droppedKeys, reasonCode };
 }
 
 export function parseGovDataRunResult(value: unknown): GovDataRunResult | null {
@@ -766,6 +968,7 @@ export function parseGovDataRunResult(value: unknown): GovDataRunResult | null {
   const columns = stringArray(value.columns);
   const rows = Array.isArray(value.rows) ? value.rows.map((row) => (Array.isArray(row) ? row : null)) : null;
   const rowCount = nonNegativeNumber(value.row_count);
+  const nullRate = finiteNumber(value.null_rate);
   const sources = Array.isArray(value.sources)
     ? value.sources.map((source) => {
         if (!isRecord(source)) {
@@ -786,6 +989,9 @@ export function parseGovDataRunResult(value: unknown): GovDataRunResult | null {
     rows == null ||
     !rows.every((row): row is unknown[] => row != null) ||
     rowCount == null ||
+    nullRate == null ||
+    nullRate < 0 ||
+    nullRate > 1 ||
     sources == null ||
     !sources.every((source): source is GovDataRunResult["sources"][number] => source != null) ||
     droppedDetail == null ||
@@ -794,7 +1000,7 @@ export function parseGovDataRunResult(value: unknown): GovDataRunResult | null {
     return null;
   }
 
-  return { columns, rows, rowCount, sources, droppedDetail, ...(value.output == null ? {} : { output: value.output }) };
+  return { columns, rows, rowCount, nullRate, sources, droppedDetail, ...(value.output == null ? {} : { output: value.output }) };
 }
 
 function parsePipelineNode(value: unknown): GovDataPipelineNode | null {
@@ -803,7 +1009,7 @@ function parsePipelineNode(value: unknown): GovDataPipelineNode | null {
   }
 
   const id = nonEmptyString(value.id);
-  const kind = oneOf(value.kind, ["SOURCE", "TRANSFORM", "JOIN", "OUTPUT"] as const);
+  const kind = oneOf(value.kind, ["SOURCE", "OPERATION", "OUTPUT"] as const);
   const title = nonEmptyString(value.title);
   const subtitle = value.subtitle == null ? null : nonEmptyString(value.subtitle);
   const datasetId = value.dataset_id == null ? null : identifierString(value.dataset_id);
@@ -834,8 +1040,11 @@ function parsePipelineLink(value: unknown) {
   const id = nonEmptyString(value.id);
   const source = nonEmptyString(value.source);
   const target = nonEmptyString(value.target);
+  const intent = value.intent == null ? null : nonEmptyString(value.intent);
 
-  return id == null || source == null || target == null ? null : { id, source, target };
+  return id == null || source == null || target == null || (value.intent != null && intent == null)
+    ? null
+    : { id, source, target, intent };
 }
 
 export function parseGovDataPlan(value: unknown): GovDataPlan | null {
@@ -843,7 +1052,7 @@ export function parseGovDataPlan(value: unknown): GovDataPlan | null {
     return null;
   }
 
-  const planner = oneOf(value.planner, ["codex", "fallback"] as const);
+  const planner = oneOf(value.planner, ["openai", "fallback"] as const);
   const plannerError = value.planner_error == null ? undefined : nonEmptyString(value.planner_error);
   const title = nonEmptyString(value.title);
   const explanation = nonEmptyString(value.explanation);
@@ -918,7 +1127,7 @@ function parseGovDataLiveService(value: unknown): GovDataLiveService | null {
 
   const service = identifierString(value.service);
   const name = nonEmptyString(value.name);
-  const endpoint = nonEmptyString(value.endpoint);
+  const endpoint = value.endpoint == null ? undefined : nonEmptyString(value.endpoint);
   const defaultOperation = value.default_operation == null ? null : identifierString(value.default_operation);
   const operations = identifierArray(value.operations);
   const requiredParams = identifierArray(value.required_params);
@@ -927,7 +1136,7 @@ function parseGovDataLiveService(value: unknown): GovDataLiveService | null {
   if (
     service == null ||
     name == null ||
-    endpoint == null ||
+    (value.endpoint != null && endpoint == null) ||
     (value.default_operation != null && defaultOperation == null) ||
     operations == null ||
     requiredParams == null ||
@@ -936,7 +1145,15 @@ function parseGovDataLiveService(value: unknown): GovDataLiveService | null {
     return null;
   }
 
-  return { service, name, endpoint, defaultOperation, operations, requiredParams, format };
+  return {
+    service,
+    name,
+    ...(endpoint == null ? {} : { endpoint }),
+    defaultOperation,
+    operations,
+    requiredParams,
+    format,
+  };
 }
 
 export function parseGovDataLiveCatalog(value: unknown): GovDataLiveCatalog | null {
@@ -956,7 +1173,7 @@ export function parseGovDataLiveResult(value: unknown): GovDataLiveResult | null
 
   const service = identifierString(value.service);
   const operation = value.operation == null ? null : identifierString(value.operation);
-  const endpoint = nonEmptyString(value.endpoint);
+  const endpoint = value.endpoint == null ? undefined : nonEmptyString(value.endpoint);
   const payload = unknownRecord(value.payload);
   const statusCode = value.status_code;
   const contentType = stringValue(value.content_type);
@@ -969,7 +1186,7 @@ export function parseGovDataLiveResult(value: unknown): GovDataLiveResult | null
   if (
     service == null ||
     (value.operation != null && operation == null) ||
-    endpoint == null ||
+    (value.endpoint != null && endpoint == null) ||
     payload == null ||
     typeof statusCode !== "number" ||
     !Number.isInteger(statusCode) ||
@@ -990,7 +1207,7 @@ export function parseGovDataLiveResult(value: unknown): GovDataLiveResult | null
   return {
     service,
     operation,
-    endpoint,
+    ...(endpoint == null ? {} : { endpoint }),
     payload,
     statusCode,
     contentType,

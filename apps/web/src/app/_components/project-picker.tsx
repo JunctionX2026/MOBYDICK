@@ -76,7 +76,7 @@ function ProjectList() {
       )}
 
       {projects.length === 0 ? (
-        <Card className="border-stroke-neutral-muted bg-bg-layer-floating min-h-72 border-dashed shadow-none">
+        <Card className="border-stroke-neutral-subtle bg-bg-layer-side-navigation min-h-72 border-dashed shadow-none">
           <Card.Header className="flex min-h-64 flex-col items-center justify-center px-6 text-center">
             <span className="bg-bg-brand-weak text-fg-brand rounded-pill mb-4 flex size-11 items-center justify-center">
               <SparklesFilledIcon size={20} />
@@ -88,7 +88,7 @@ function ProjectList() {
           </Card.Header>
         </Card>
       ) : (
-        <ul className="border-stroke-neutral-muted bg-bg-layer-floating overflow-hidden rounded-surface border shadow-elevation-raised">
+        <ul className="border-stroke-neutral-subtle bg-bg-layer-side-navigation overflow-hidden rounded-surface border shadow-elevation-raised">
           {projects.map((project) => {
             const phase = phaseLabel(project.phase);
 
@@ -169,7 +169,7 @@ function ProjectListSkeleton() {
     <ul
       aria-busy="true"
       aria-label="프로젝트를 불러오는 중"
-      className="border-stroke-neutral-muted bg-bg-layer-floating overflow-hidden rounded-surface border shadow-elevation-raised"
+      className="border-stroke-neutral-subtle bg-bg-layer-side-navigation overflow-hidden rounded-surface border shadow-elevation-raised"
     >
       {[0, 1, 2].map((key) => (
         <li className="border-stroke-neutral-subtle last:border-b-0 border-b" key={key}>
@@ -185,7 +185,7 @@ export function ProjectPicker() {
 
   return (
     <div className="flex flex-col gap-4">
-      <header className="border-stroke-neutral-muted bg-bg-layer-floating shadow-elevation-floating flex flex-col gap-4 rounded-surface border p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+      <header className="border-stroke-neutral-subtle bg-bg-layer-side-navigation shadow-elevation-floating flex flex-col gap-4 rounded-surface border p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
         <div className="min-w-0">
           <p className="text-fg-neutral-muted text-xs font-semibold tracking-wide">MOBYDICK WORKSPACE</p>
           <h1 className="text-fg-neutral mt-1 text-2xl font-semibold tracking-tight">프로젝트</h1>

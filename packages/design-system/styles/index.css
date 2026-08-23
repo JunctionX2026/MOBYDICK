@@ -10,7 +10,7 @@
   }
 
   .moby-spinner {
-    --moby-spinner-duration: 1s;
+    --moby-spinner-duration: var(--moby-duration-decorative);
   }
 
   .moby-spinner[data-spinner-size="small"] .moby-spinner-blade {

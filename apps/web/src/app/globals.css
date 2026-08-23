@@ -14,6 +14,67 @@
   }
 }
 
+@layer components {
+  .moby-dialog-transition {
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(0.5rem) scale(0.98);
+    transition:
+      opacity var(--moby-duration-slow) var(--moby-easing-standard),
+      transform var(--moby-duration-slow) var(--moby-easing-standard);
+  }
+
+  .moby-dialog-transition[open] {
+    pointer-events: auto;
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  .moby-dialog-transition::backdrop {
+    background-color: transparent;
+    transition: background-color var(--moby-duration-slow) var(--moby-easing-standard);
+  }
+
+  @supports (transition-behavior: allow-discrete) {
+    .moby-dialog-transition {
+      transition:
+        opacity var(--moby-duration-slow) var(--moby-easing-standard),
+        transform var(--moby-duration-slow) var(--moby-easing-standard),
+        display var(--moby-duration-slow) var(--moby-easing-standard) allow-discrete,
+        overlay var(--moby-duration-slow) var(--moby-easing-standard) allow-discrete;
+    }
+
+    .moby-dialog-transition::backdrop {
+      transition:
+        background-color var(--moby-duration-slow) var(--moby-easing-standard),
+        display var(--moby-duration-slow) var(--moby-easing-standard) allow-discrete,
+        overlay var(--moby-duration-slow) var(--moby-easing-standard) allow-discrete;
+    }
+  }
+
+  .moby-dialog-transition[open]::backdrop {
+    background-color: var(--moby-color-bg-overlay);
+  }
+
+  @starting-style {
+    .moby-dialog-transition[open] {
+      opacity: 0;
+      transform: translateY(0.5rem) scale(0.98);
+    }
+
+    .moby-dialog-transition[open]::backdrop {
+      background-color: transparent;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .moby-dialog-transition,
+    .moby-dialog-transition::backdrop {
+      transition: none;
+    }
+  }
+}
+
 @keyframes moby-pop-in {
   from {
     opacity: 0;

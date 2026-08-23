@@ -2,7 +2,7 @@
 
 import { Badge, Button, Callout, Input, Skeleton } from "@mobydick/design-system";
 import { ArrowRightIcon, DatabaseFilledIcon } from "@mobydick/icon";
-import { useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { dialogTransitionClassName, useDialogTransition } from "@/app/_components/dialog-transition";
 
 interface RecommendedDataset {
@@ -114,73 +114,19 @@ export function DataSourceDialog({ onOpenChange, onSelect, open, question }: Dat
   const [datasets, setDatasets] = useState<RecommendedDataset[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const requestRef = useRef<AbortController | null>(null);
 
-  useEffect(() => {
-    if (!open) {
-      return;
-    }
-
-    setQuery(question);
-    setDatasets([]);
-    setError(null);
+  const load = useCallback((nextQuery: string) => {
+    requestRef.current?.abort();
     const controller = new AbortController();
-
-    const load = async () => {
-      setLoading(true);
-
-      try {
-        const response = await fetch("/api/govdata/recommend", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ query: question, k: 8 }),
-          signal: controller.signal,
-        });
-        const payload: unknown = await response.json();
-
-        if (!response.ok) {
-          const message = isRecord(payload) && isRecord(payload.error) ? stringValue(payload.error.message) : null;
-          throw new Error(message ?? "데이터 소스를 불러오지 못했어요.");
-        }
-
-        const parsed = parseDatasets(payload);
-
-        if (parsed == null) {
-          throw new Error("데이터 소스 응답을 확인하지 못했어요.");
-        }
-
-        setDatasets(parsed);
-      } catch (reason) {
-        if (!controller.signal.aborted) {
-          setError(reason instanceof Error ? reason.message : "데이터 소스를 불러오지 못했어요.");
-        }
-      } finally {
-        if (!controller.signal.aborted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    void load();
-
-    return () => controller.abort();
-  }, [open, question]);
-
-  const search = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const trimmed = query.trim();
-
-    if (trimmed === "") {
-      setError("질문을 입력하세요.");
-      return;
-    }
-
-    setError(null);
+    requestRef.current = controller;
     setLoading(true);
 
     void fetch("/api/govdata/recommend", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ query: trimmed, k: 8 }),
+      body: JSON.stringify({ query: nextQuery, k: 8 }),
+      signal: controller.signal,
     })
       .then(async (response) => {
         const payload: unknown = await response.json();
@@ -198,15 +144,57 @@ export function DataSourceDialog({ onOpenChange, onSelect, open, question }: Dat
 
         setDatasets(parsed);
       })
-      .catch((reason: unknown) => setError(reason instanceof Error ? reason.message : "데이터 소스를 불러오지 못했어요."))
-      .finally(() => setLoading(false));
+      .catch((reason: unknown) => {
+        if (!controller.signal.aborted) {
+          setError(reason instanceof Error ? reason.message : "데이터 소스를 불러오지 못했어요.");
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted && requestRef.current === controller) {
+          requestRef.current = null;
+          setLoading(false);
+        }
+      });
+
+    return controller;
+  }, []);
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    setQuery(question);
+    setDatasets([]);
+    setError(null);
+    const controller = load(question);
+
+    return () => {
+      controller.abort();
+      if (requestRef.current === controller) {
+        requestRef.current = null;
+      }
+    };
+  }, [load, open, question]);
+
+  const search = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const trimmed = query.trim();
+
+    if (trimmed === "") {
+      setError("질문을 입력하세요.");
+      return;
+    }
+
+    setError(null);
+    void load(trimmed);
   };
 
   return (
     <dialog
       aria-describedby="data-source-dialog-description"
       aria-labelledby="data-source-dialog-title"
-      className={`${dialogTransitionClassName} m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-2xl overflow-y-auto rounded-surface border border-stroke-neutral-subtle bg-bg-layer-modal p-0 text-fg-neutral shadow-elevation-overlay backdrop:bg-bg-overlay`}
+      className={`${dialogTransitionClassName} m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-2xl overflow-y-auto rounded-surface border border-stroke-neutral-subtle bg-bg-layer-modal p-0 text-fg-neutral shadow-elevation-overlay`}
       id="data-source-dialog"
       onClick={(event) => {
         if (event.target === event.currentTarget) {

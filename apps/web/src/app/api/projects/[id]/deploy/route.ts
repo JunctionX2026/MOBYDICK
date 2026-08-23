@@ -1,4 +1,4 @@
-import { deployProject, findProject } from "@/server/project-repository";
+import { StorageError, deployProject, findProject } from "@/server/project-repository";
 
 function deploymentOrigin(request: Request) {
   const host = request.headers.get("x-forwarded-host") ?? request.headers.get("host");
@@ -14,7 +14,24 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     return Response.json({ error: { message: "프로젝트를 찾을 수 없어요." } }, { status: 404 });
   }
 
-  const deployed = await deployProject(project.id);
+  if (project.workflow.operationSpec == null) {
+    return Response.json(
+      { error: { message: "저장된 실행 파이프라인이 없어 배포할 수 없어요." } },
+      { status: 422 },
+    );
+  }
+
+  let deployed;
+
+  try {
+    deployed = await deployProject(project.id);
+  } catch (error) {
+    if (error instanceof StorageError) {
+      return Response.json({ error: { message: error.message } }, { status: 422 });
+    }
+
+    throw error;
+  }
   const origin = deploymentOrigin(request);
   const deploymentId = deployed.deploymentId;
 

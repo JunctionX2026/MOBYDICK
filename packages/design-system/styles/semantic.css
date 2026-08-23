@@ -87,6 +87,7 @@
   --moby-duration-fast: 120ms;
   --moby-duration-medium: 200ms;
   --moby-duration-slow: 320ms;
+  --moby-duration-decorative: 750ms;
   --moby-duration-shimmer: 1.5s;
 
   --moby-easing-standard: cubic-bezier(0.2, 0, 0, 1);

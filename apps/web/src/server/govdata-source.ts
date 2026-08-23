@@ -53,7 +53,11 @@ async function request(path: string, init?: RequestInit): Promise<unknown> {
   }
 
   if (!response.ok) {
-    throw new GovDataSourceError(`GovData Studio 요청이 실패했어요. (${response.status})`, response.status >= 500 ? 502 : 400);
+    const detail =
+      typeof payload === "object" && payload !== null && "detail" in payload && typeof payload.detail === "string"
+        ? payload.detail
+        : `GovData Studio 요청이 실패했어요. (${response.status})`;
+    throw new GovDataSourceError(detail, response.status >= 500 ? 502 : 400);
   }
 
   return payload;
@@ -90,6 +94,7 @@ export function serializeGovDataRunResult(result: GovDataRunResult) {
     columns: result.columns,
     rows: result.rows,
     row_count: result.rowCount,
+    null_rate: result.nullRate,
     sources: result.sources.map((source) => ({
       alias: source.alias,
       dataset_id: source.datasetId,
@@ -104,6 +109,7 @@ export function serializeGovDataRunResult(result: GovDataRunResult) {
       match_rate: detail.matchRate,
       dropped: detail.dropped,
       dropped_keys: detail.droppedKeys,
+      reason_code: detail.reasonCode,
     })),
     ...(result.output == null ? {} : { output: result.output }),
   };
@@ -126,7 +132,12 @@ function externalPlan(plan: GovDataPlan) {
         dataset_id: node.datasetId,
         position: node.position,
       })),
-      links: plan.pipeline.links,
+      links: plan.pipeline.links.map((link) => ({
+        id: link.id,
+        source: link.source,
+        target: link.target,
+        intent: link.intent,
+      })),
     },
   };
 }
@@ -219,6 +230,19 @@ export async function getGovDataLiveCatalog(): Promise<GovDataLiveCatalog> {
   return catalog;
 }
 
+export function serializeGovDataLiveCatalog(catalog: GovDataLiveCatalog) {
+  return {
+    services: catalog.services.map((service) => ({
+      service: service.service,
+      name: service.name,
+      default_operation: service.defaultOperation,
+      operations: service.operations,
+      required_params: service.requiredParams,
+      format: service.format,
+    })),
+  };
+}
+
 export async function executeGovDataLive(
   service: string,
   operation: string | undefined,
@@ -236,4 +260,19 @@ export async function executeGovDataLive(
   }
 
   return result;
+}
+
+export function serializeGovDataLiveResult(result: GovDataLiveResult) {
+  return {
+    service: result.service,
+    operation: result.operation,
+    payload: result.payload,
+    status_code: result.statusCode,
+    content_type: result.contentType,
+    format: result.format,
+    response: result.response,
+    records: result.records,
+    record_count: result.recordCount,
+    total_count: result.totalCount,
+  };
 }

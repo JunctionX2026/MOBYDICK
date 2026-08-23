@@ -1,8 +1,8 @@
 import { parseGovDataOperationSpec, type GovDataOperationSpec } from "./govdata";
 
-export type WorkflowNodeKind = "source" | "transform" | "join" | "output";
+export type WorkflowNodeKind = "source" | "operation" | "output";
 
-const NODE_KINDS: readonly WorkflowNodeKind[] = ["source", "transform", "join", "output"];
+const NODE_KINDS: readonly WorkflowNodeKind[] = ["source", "operation", "output"];
 
 export interface WorkflowNodePosition {
   x: number;
@@ -22,6 +22,7 @@ export interface WorkflowLink {
   id: string;
   source: string;
   target: string;
+  intent: string | null;
 }
 
 export interface Workflow {
@@ -102,7 +103,7 @@ function parseLink(value: unknown, nodeIds: ReadonlySet<string>): WorkflowLink |
     return null;
   }
 
-  const { id, source, target } = value;
+  const { id, intent, source, target } = value;
 
   if (!isNonEmptyString(id) || !isNonEmptyString(source) || !isNonEmptyString(target)) {
     return null;
@@ -112,7 +113,11 @@ function parseLink(value: unknown, nodeIds: ReadonlySet<string>): WorkflowLink |
     return null;
   }
 
-  return { id, source, target };
+  if (intent != null && !isNonEmptyString(intent)) {
+    return null;
+  }
+
+  return { id, intent: intent == null ? null : intent.trim(), source, target };
 }
 
 /**
@@ -127,27 +132,34 @@ export function parseWorkflow(value: unknown): Workflow | null {
   }
 
   const nodes: WorkflowNode[] = [];
+  const nodeIds = new Set<string>();
 
   for (const candidate of value.nodes) {
     const node = parseNode(candidate);
 
-    if (node == null) {
+    if (node == null || nodeIds.has(node.id)) {
       return null;
     }
 
+    nodeIds.add(node.id);
     nodes.push(node);
   }
 
-  const nodeIds = new Set(nodes.map((node) => node.id));
   const links: WorkflowLink[] = [];
+  const linkIds = new Set<string>();
 
   for (const candidate of value.links) {
     const link = parseLink(candidate, nodeIds);
 
-    if (link == null) {
+    if (
+      link == null ||
+      linkIds.has(link.id) ||
+      linkRejection(links, link.source, link.target) != null
+    ) {
       return null;
     }
 
+    linkIds.add(link.id);
     links.push(link);
   }
 

@@ -3,7 +3,7 @@ server.py — GovData Studio API
   GET  /api/search?q=&k=            하이브리드 검색 (데이터셋)
   POST /api/recommend {query,k}     검색 + 조인 가능 이웃 + 서로 조인되는 집합 + 기본 OperationSpec
   GET  /api/dataset/{id}            컬럼 위키
-  POST /api/plan {query,schema?}    Codex headless가 OperationSpec을 작성하고 실행
+  POST /api/plan {query,schema?}    OpenAI planner가 OperationSpec을 작성하고 실행
   POST /api/run {spec}              OperationSpec → SQL → 실행 + dropped_detail
   GET  /api/stats                   발표용 수치
   GET  /api/live/catalog            허용된 공공데이터 실시간 API 목록
@@ -18,16 +18,16 @@ import threading
 from pathlib import Path
 from typing import Any
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query as FastApiQuery
 from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel, Field
 
 from .core import (
     Catalog,
     Compiler,
-    _codex_enabled,
+    _ai_enabled,
     _planner_contract_error,
-    codex_plan,
+    openai_plan,
     pipeline_for_spec,
     query_region,
     single_spec,
@@ -54,7 +54,7 @@ threading.Thread(target=lambda: cat.embed("warm up"), daemon=True).start()
 
 class Query(BaseModel):
     query: str
-    k: int = 8
+    k: int = Field(default=8, ge=1, le=20)
 
 
 class RunReq(BaseModel):
@@ -74,7 +74,7 @@ class LiveExecuteReq(BaseModel):
 
 
 def planning_enabled() -> bool:
-    return _codex_enabled()
+    return _ai_enabled()
 
 
 def fallback_plan(query: str, hits: list[dict], sets: list[dict], spec: dict | None) -> dict:
@@ -95,7 +95,7 @@ def index():
 
 
 @app.get("/api/search")
-def search(q: str, k: int = 8):
+def search(q: str, k: int = FastApiQuery(default=8, ge=1, le=20)):
     return cat.search(q, k)
 
 
@@ -114,8 +114,8 @@ def recommend(req: Query):
         direct = cat.joinable_sets(seeds[:1], seeds, 0.3, 4)
         sets = [d for d in direct if set(d["members"]) >= set(seeds[:2])] + [x for x in sets if x not in direct]
     for s in sets:
-        s["spec"] = suggest_spec(cat, s["members"], s["level"], s["links"])
-    single = single_spec(cat, ids[0], prefer, query_region(req.query)) if hits else None
+        s["spec"] = suggest_spec(cat, s["members"], s["level"], s["links"], req.query)
+    single = single_spec(cat, ids[0], prefer, query_region(req.query), req.query) if hits else None
     weak = bool(hits) and hits[0].get("confidence") == "low"
     # 단일 주제 질문이면 조인 집합을 자동 적용하지 않는다 (제안으로만 보여준다)
     mode = "join" if (multi and sets) else "single"
@@ -138,23 +138,26 @@ def plan(req: PlanReq):
     hits, seeds, _ = cat.multi_search(req.query, 8)
     ids = [h["dataset_id"] for h in hits]
     sets = cat.joinable_sets(seeds[:3], ids, 0.5, 4)
+    if len(seeds) >= 2:
+        direct = cat.joinable_sets(seeds[:1], seeds, 0.3, 4)
+        sets = [d for d in direct if set(d["members"]) >= set(seeds[:2])] + [x for x in sets if x not in direct]
     for item in sets:
-        item["spec"] = suggest_spec(cat, item["members"], item["level"], item["links"])
+        item["spec"] = suggest_spec(cat, item["members"], item["level"], item["links"], req.query)
 
     multi = len(seeds) >= 2 or bool(_re.search(r"\b(join|combine|compare|together|조인|결합|비교|대비)\b", req.query, _re.I))
     prefer = "emd" if _re.search(r"\b(town|village|district|읍면동|동별|읍면별)\b", req.query, _re.I) else \
              "sgg" if _re.search(r"\b(city|county|cities|시군|시군별|시군구)\b", req.query, _re.I) else None
-    single = single_spec(cat, ids[0], prefer, query_region(req.query)) if hits else None
+    single = single_spec(cat, ids[0], prefer, query_region(req.query), req.query) if hits else None
     deterministic = sets[0]["spec"] if multi and sets else single
 
     out: dict | None = None
     if planning_enabled():
         try:
-            out = codex_plan(cat, req.query, hits, sets)
+            out = openai_plan(cat, req.query, hits, sets)
             contract_error = _planner_contract_error(out)
             if contract_error is not None:
                 raise ValueError(f"planner contract: {contract_error}")
-            out["planner"] = "codex"
+            out["planner"] = "openai"
         except Exception as error:                            # noqa: BLE001
             out = fallback_plan(req.query, hits, sets, deterministic)
             out["planner_error"] = str(error)
@@ -169,17 +172,17 @@ def plan(req: PlanReq):
         if contract_error is not None:
             raise ValueError(f"planner contract: {contract_error}")
         comp.compile(out["spec"])
-        out["pipeline"] = pipeline_for_spec(cat, out["spec"])
+        out["pipeline"] = pipeline_for_spec(cat, out["spec"], req.query)
         out["result"] = comp.run(out["spec"], req.output_schema)
     except Exception as e:                                   # noqa: BLE001
         if deterministic is None or out.get("spec") == deterministic:
             raise HTTPException(422, f"실행 계획을 검증하지 못했어요: {e}")
         out = fallback_plan(req.query, hits, sets, deterministic)
-        out["planner_error"] = f"codex plan rejected: {e}"
+        out["planner_error"] = f"OpenAI plan rejected: {e}"
         contract_error = _planner_contract_error(out)
         if contract_error is not None:
             raise HTTPException(422, f"fallback 계획을 검증하지 못했어요: {contract_error}")
-        out["pipeline"] = pipeline_for_spec(cat, out["spec"])
+        out["pipeline"] = pipeline_for_spec(cat, out["spec"], req.query)
         out["result"] = comp.run(out["spec"], req.output_schema)
     return out
 

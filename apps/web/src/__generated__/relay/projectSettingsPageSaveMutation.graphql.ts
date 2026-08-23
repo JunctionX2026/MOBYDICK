@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<bfa5d65d8e871d2da36f5df3cb96c4a6>>
+ * @generated SignedSource<<bc71f157d90a5beec389377f74195a8f>>
  * @lightSyntaxTransform
  */
 
@@ -9,7 +9,7 @@
 
 import { ConcreteRequest } from 'relay-runtime';
 export type ProjectPhase = "COMPOSE" | "DISCOVER" | "SERVE" | "%future added value";
-export type WorkflowNodeKind = "JOIN" | "OUTPUT" | "SOURCE" | "TRANSFORM" | "%future added value";
+export type WorkflowNodeKind = "OPERATION" | "OUTPUT" | "SOURCE" | "%future added value";
 export type SaveWorkflowInput = {
   id: string;
   links: ReadonlyArray<WorkflowLinkInput>;
@@ -32,6 +32,7 @@ export type PositionInput = {
 };
 export type WorkflowLinkInput = {
   id: string;
+  intent?: string | null | undefined;
   source: string;
   target: string;
 };

@@ -77,7 +77,7 @@ export function NewProjectDialog({ onOpenChange, open }: NewProjectDialogProps) 
     <dialog
       aria-describedby="new-project-description"
       aria-labelledby="new-project-title"
-      className={`${dialogTransitionClassName} m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-lg overflow-y-auto rounded-surface border border-stroke-neutral-subtle bg-bg-layer-modal p-0 text-fg-neutral shadow-elevation-overlay backdrop:bg-bg-overlay`}
+      className={`${dialogTransitionClassName} m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-lg overflow-y-auto rounded-surface border border-stroke-neutral-subtle bg-bg-layer-modal p-0 text-fg-neutral shadow-elevation-overlay`}
       id="new-project-dialog"
       onClick={(event) => {
         if (event.target === event.currentTarget) {
@@ -117,12 +117,15 @@ export function NewProjectDialog({ onOpenChange, open }: NewProjectDialogProps) 
 
           <label className="flex flex-col gap-1.5">
             <span className="text-fg-neutral text-sm font-medium">설명</span>
+            <span className="text-fg-neutral-muted text-xs">
+              첫 줄에 사용할 데이터, 둘째 줄에 알고 싶은 결과를 적어 주세요.
+            </span>
             <Textarea
               className="min-h-28"
               disabled={creating}
               name="description"
               onChange={(event) => setDescription(event.target.value)}
-              placeholder="무엇을 알아보고 싶은지 적어주세요."
+              placeholder={'예: 노령인구·기온·무더위쉼터 데이터를 사용합니다.\n읍면동별 폭염 취약도를 조인해 우선 대응 지역을 찾습니다.'}
               required
               value={description}
             />

@@ -10,7 +10,7 @@ python3 -m venv .venv
 
 `data/gbdata.duckdb`와 `data/index/*.npy`는 Git LFS 파일이에요. 상세한 원칙과 검증 근거는 [`../../research/external/govdatastudiobundle/`](../../research/external/govdatastudiobundle/)에 있어요.
 
-AI planner는 `GOVDATA_AI_ENABLED=true`, `GOVDATA_AI_PROVIDER=codex`일 때 로컬 Codex CLI의 headless `codex exec`를 사용해요. Codex CLI가 같은 사용자 계정으로 ChatGPT OAuth 로그인되어 있어야 해요. FastAPI만 OAuth 세션을 사용하고 웹 앱에는 토큰을 전달하지 않아요.
+AI planner는 `GOVDATA_AI_ENABLED=true`, `GOVDATA_AI_PROVIDER=openai`, `OPENAI_API_KEY`가 설정되어 있을 때 OpenAI Responses API의 `gpt-5.6-luna`를 사용해요. API 키는 FastAPI 프로세스에서만 읽고 웹 앱이나 응답에는 전달하지 않아요.
 
 ## 공공데이터 실시간 API
 

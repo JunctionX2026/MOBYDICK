@@ -23,6 +23,16 @@ interface ProjectRow {
   updated_at: string;
 }
 
+interface DeploymentRow {
+  id: string;
+  project_id: string;
+  name: string;
+  question: string;
+  workflow: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface ProjectList {
   projects: Project[];
   droppedCount: number;
@@ -64,23 +74,93 @@ function toProject(row: ProjectRow): Project | null {
   });
 }
 
-function toRow(project: Project) {
-  const workflow = {
-    ...project.workflow,
-    ...(project.workflow.operationSpec == null
-      ? { operationSpec: project.workflow.operationSpec ?? null }
-      : { operationSpec: serializeGovDataOperationSpec(project.workflow.operationSpec) }),
+function storedWorkflow(workflow: Workflow) {
+  return {
+    ...workflow,
+    ...(workflow.operationSpec == null
+      ? { operationSpec: workflow.operationSpec ?? null }
+      : { operationSpec: serializeGovDataOperationSpec(workflow.operationSpec) }),
   };
+}
 
+function toRow(project: Project) {
   return [
     project.id,
     project.name,
     project.question,
-    JSON.stringify(workflow),
+    JSON.stringify(storedWorkflow(project.workflow)),
     project.deploymentId,
     project.createdAt,
     project.updatedAt,
   ] as const;
+}
+
+function deploymentRow(project: Project) {
+  if (project.deploymentId == null) {
+    throw new StorageError("A deployment needs an id.");
+  }
+
+  return [
+    project.deploymentId,
+    project.id,
+    project.name,
+    project.question,
+    JSON.stringify(storedWorkflow(project.workflow)),
+    project.createdAt,
+    project.updatedAt,
+  ] as const;
+}
+
+function toDeploymentProject(row: DeploymentRow): Project | null {
+  let workflow: unknown;
+
+  try {
+    workflow = JSON.parse(row.workflow);
+  } catch {
+    return null;
+  }
+
+  return parseProject({
+    id: row.project_id,
+    name: row.name,
+    question: row.question,
+    workflow,
+    deploymentId: row.id,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  });
+}
+
+type Database = Awaited<ReturnType<typeof database>>;
+
+function projectStatement(db: Database, project: Project) {
+  return db
+    .prepare(
+      `INSERT INTO projects (${SELECT_COLUMNS}) VALUES (?, ?, ?, ?, ?, ?, ?)
+       ON CONFLICT(id) DO UPDATE SET
+         name = excluded.name,
+         question = excluded.question,
+         workflow = excluded.workflow,
+         deployment_id = excluded.deployment_id,
+         updated_at = excluded.updated_at`,
+    )
+    .bind(...toRow(project));
+}
+
+function deploymentStatement(db: Database, project: Project) {
+  return db
+    .prepare(
+      `INSERT INTO deployments
+         (id, project_id, name, question, workflow, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?)
+       ON CONFLICT(id) DO UPDATE SET
+         project_id = excluded.project_id,
+         name = excluded.name,
+         question = excluded.question,
+         workflow = excluded.workflow,
+         updated_at = excluded.updated_at`,
+    )
+    .bind(...deploymentRow(project));
 }
 
 const SELECT_COLUMNS =
@@ -123,18 +203,7 @@ async function requireProject(id: ProjectId): Promise<Project> {
 async function write(project: Project): Promise<Project> {
   const db = await database();
 
-  await db
-    .prepare(
-      `INSERT INTO projects (${SELECT_COLUMNS}) VALUES (?, ?, ?, ?, ?, ?, ?)
-       ON CONFLICT(id) DO UPDATE SET
-         name = excluded.name,
-         question = excluded.question,
-         workflow = excluded.workflow,
-         deployment_id = excluded.deployment_id,
-         updated_at = excluded.updated_at`,
-    )
-    .bind(...toRow(project))
-    .run();
+  await projectStatement(db, project).run();
 
   return project;
 }
@@ -159,23 +228,40 @@ export async function saveWorkflow(id: ProjectId, workflow: Workflow) {
 
 export async function deployProject(id: ProjectId) {
   const project = await requireProject(id);
-  return write(touchProject(project, { deploymentId: project.deploymentId ?? ulid() }));
+
+  if (project.workflow.operationSpec == null) {
+    throw new StorageError("A project needs a saved operation spec before it can be deployed.");
+  }
+
+  const deployed = touchProject(project, { deploymentId: project.deploymentId ?? ulid() });
+  const db = await database();
+
+  await db.batch([projectStatement(db, deployed), deploymentStatement(db, deployed)]);
+
+  return deployed;
 }
 
 export async function findProjectByDeploymentId(deploymentId: string) {
   const db = await database();
   const row = await db
-    .prepare(`SELECT ${SELECT_COLUMNS} FROM projects WHERE deployment_id = ?`)
+    .prepare(
+      `SELECT id, project_id, name, question, workflow, created_at, updated_at
+       FROM deployments
+       WHERE id = ?`,
+    )
     .bind(deploymentId)
-    .first<ProjectRow>();
+    .first<DeploymentRow>();
 
-  return row == null ? null : toProject(row);
+  return row == null ? null : toDeploymentProject(row);
 }
 
 export async function removeProject(id: ProjectId) {
   const db = await database();
 
-  await db.prepare("DELETE FROM projects WHERE id = ?").bind(id).run();
+  await db.batch([
+    db.prepare("DELETE FROM deployments WHERE project_id = ?").bind(id),
+    db.prepare("DELETE FROM projects WHERE id = ?").bind(id),
+  ]);
 
   return id;
 }

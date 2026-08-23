@@ -41,6 +41,7 @@ interface WorkflowNodeInput {
 
 interface WorkflowLinkInput {
   id: string;
+  intent?: string | null;
   source: string;
   target: string;
 }
@@ -93,19 +94,47 @@ function toDomainWorkflow(input: {
   return workflow;
 }
 
+/**
+ * Relay normalizes every GraphQL ID globally, so workflow IDs need a project
+ * namespace even though they are only unique inside a stored workflow.
+ */
+function presentWorkflow(project: Project) {
+  const prefix = `${project.id}-`;
+  const nodeIds = new Map(
+    project.workflow.nodes.map((node) => [
+      node.id,
+      node.id.startsWith(prefix) ? node.id : `${prefix}${node.id}`,
+    ]),
+  );
+  const nodes = project.workflow.nodes.map((node) => ({
+    ...node,
+    id: nodeIds.get(node.id) ?? `${prefix}${node.id}`,
+  }));
+  const links = project.workflow.links.map((link) => ({
+    ...link,
+    id: link.id.startsWith(prefix) ? link.id : `${prefix}${link.id}`,
+    source: nodeIds.get(link.source) ?? `${prefix}${link.source}`,
+    target: nodeIds.get(link.target) ?? `${prefix}${link.target}`,
+  }));
+
+  return { nodes, links };
+}
+
 function present(project: Project) {
+  const workflow = presentWorkflow(project);
+
   return {
     id: project.id,
     name: project.name,
     question: project.question,
     phase: PROJECT_PHASE_TO_GRAPHQL[deriveProjectPhase(project)],
     workflow: {
-      nodes: project.workflow.nodes.map((node) => ({
+      nodes: workflow.nodes.map((node) => ({
         ...node,
         kind: NODE_KIND_TO_GRAPHQL[node.kind],
         datasetId: node.datasetId,
       })),
-      links: project.workflow.links,
+      links: workflow.links,
       operationSpecJson:
         project.workflow.operationSpec == null
           ? null

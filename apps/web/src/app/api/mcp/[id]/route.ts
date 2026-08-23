@@ -1,6 +1,6 @@
 import { GovDataSourceError } from "@/server/govdata-source";
 import { runStoredDeployment } from "@/server/deployment-runtime";
-import { errorResponse, isRecord } from "@/server/govdata-http";
+import { isRecord } from "@/server/govdata-http";
 import { findProjectByDeploymentId } from "@/server/project-repository";
 
 const tool = {
@@ -8,7 +8,12 @@ const tool = {
   inputSchema: {
     additionalProperties: false,
     properties: {
-      request: { type: "object" },
+      request: {
+        type: "object",
+        properties: {
+          filters: { type: "object" },
+        },
+      },
       schema: { type: "object" },
     },
     required: [],
@@ -21,8 +26,17 @@ function jsonRpc(id: unknown, result: unknown) {
   return Response.json({ id, jsonrpc: "2.0", result });
 }
 
+function jsonRpcError(id: unknown, code: number, message: string, status = 200) {
+  return Response.json({ error: { code, message }, id, jsonrpc: "2.0" }, { status });
+}
+
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+
+  if ((await findProjectByDeploymentId(id)) == null) {
+    return Response.json({ error: { message: "배포를 찾을 수 없어요." } }, { status: 404 });
+  }
+
   return Response.json({
     deploymentId: id,
     name: "MOBYDICK GovData MCP",
@@ -32,17 +46,28 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 }
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  let body: unknown;
+
   try {
-    const { id } = await params;
+    body = await request.json();
+  } catch {
+    return jsonRpcError(null, -32700, "Parse error");
+  }
+
+  if (!isRecord(body)) {
+    return jsonRpcError(null, -32600, "Invalid Request");
+  }
+
+  const rpcId = body.id ?? null;
+  const method = typeof body.method === "string" ? body.method : "";
+
+  try {
     const project = await findProjectByDeploymentId(id);
 
     if (project == null) {
-      throw new GovDataSourceError("배포를 찾을 수 없어요.", 404);
+      return jsonRpcError(rpcId, -32004, "Deployment not found", 404);
     }
-
-    const body: unknown = await request.json();
-    const rpcId = isRecord(body) ? body.id ?? null : null;
-    const method = isRecord(body) && typeof body.method === "string" ? body.method : "";
 
     if (method === "notifications/initialized") {
       return new Response(null, { status: 202 });
@@ -61,11 +86,20 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     }
 
     if (method !== "tools/call") {
-      return jsonRpc(rpcId, { error: { code: -32601, message: "Method not found" } });
+      return jsonRpcError(rpcId, -32601, "Method not found");
     }
 
-    const paramsValue = isRecord(body) && isRecord(body.params) ? body.params : null;
-    const argumentsValue = paramsValue != null && isRecord(paramsValue.arguments) ? paramsValue.arguments : {};
+    const paramsValue = isRecord(body.params) ? body.params : null;
+
+    if (paramsValue == null || paramsValue.name !== tool.name) {
+      return jsonRpcError(rpcId, -32602, "Unknown or invalid tool");
+    }
+
+    if (paramsValue.arguments !== undefined && !isRecord(paramsValue.arguments)) {
+      return jsonRpcError(rpcId, -32602, "Tool arguments must be a JSON object");
+    }
+
+    const argumentsValue = paramsValue.arguments ?? {};
     const payload = await runStoredDeployment(project, id, argumentsValue);
 
     return jsonRpc(rpcId, {
@@ -73,6 +107,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       structuredContent: payload,
     });
   } catch (error) {
-    return errorResponse(error);
+    if (error instanceof GovDataSourceError) {
+      return jsonRpcError(rpcId, error.status >= 500 ? -32603 : -32602, error.message);
+    }
+
+    return jsonRpcError(rpcId, -32603, "Internal error");
   }
 }

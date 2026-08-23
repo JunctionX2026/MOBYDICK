@@ -13,7 +13,7 @@
 ## 규칙
 
 - `app/`은 선언적 `OperationSpec`만 받아 DuckDB를 계산해요.
-- Codex headless 호출은 이 FastAPI 프로세스 안에서만 수행하고, OAuth 토큰을 웹 앱이나 응답으로 전달하지 않아요.
+- OpenAI Responses API 호출은 이 FastAPI 프로세스 안에서만 수행하고, API 키를 웹 앱이나 응답으로 전달하지 않아요.
 - 행은 임베딩하지 않고 카탈로그 메타데이터만 검색해요.
 - 데이터셋과 인덱스 대용량 파일은 Git LFS로 관리해요.
 - API 키는 `.env` 또는 실행 환경에서만 읽고 저장소에 넣지 않아요.

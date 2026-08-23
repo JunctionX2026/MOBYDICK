@@ -1,4 +1,8 @@
-import { GovDataSourceError, executeGovDataLive } from "@/server/govdata-source";
+import {
+  GovDataSourceError,
+  executeGovDataLive,
+  serializeGovDataLiveResult,
+} from "@/server/govdata-source";
 import { errorResponse, isRecord, requestJson } from "@/server/govdata-http";
 
 export async function POST(request: Request) {
@@ -15,7 +19,7 @@ export async function POST(request: Request) {
       throw new GovDataSourceError("공공데이터 payload는 JSON 객체여야 해요.", 400);
     }
 
-    return Response.json(await executeGovDataLive(service, operation || undefined, payload));
+    return Response.json(serializeGovDataLiveResult(await executeGovDataLive(service, operation || undefined, payload)));
   } catch (error) {
     return errorResponse(error);
   }

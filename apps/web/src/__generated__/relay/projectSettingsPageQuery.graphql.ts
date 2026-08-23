@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<1e8bbd7d3cd71813bc633ff781107c72>>
+ * @generated SignedSource<<8b84fbc3f233efe7819baa9908371f43>>
  * @lightSyntaxTransform
  */
 
@@ -8,7 +8,7 @@
 // @ts-nocheck
 
 import { ConcreteRequest } from 'relay-runtime';
-export type WorkflowNodeKind = "JOIN" | "OUTPUT" | "SOURCE" | "TRANSFORM" | "%future added value";
+export type WorkflowNodeKind = "OPERATION" | "OUTPUT" | "SOURCE" | "%future added value";
 export type projectSettingsPageQuery$variables = {
   id: string;
 };
@@ -20,6 +20,7 @@ export type projectSettingsPageQuery$data = {
     readonly workflow: {
       readonly links: ReadonlyArray<{
         readonly id: string;
+        readonly intent: string | null | undefined;
         readonly source: string;
         readonly target: string;
       }>;
@@ -185,6 +186,13 @@ v2 = [
                 "kind": "ScalarField",
                 "name": "target",
                 "storageKey": null
+              },
+              {
+                "alias": null,
+                "args": null,
+                "kind": "ScalarField",
+                "name": "intent",
+                "storageKey": null
               }
             ],
             "storageKey": null
@@ -235,16 +243,16 @@ return {
     "selections": (v2/*:: as any*/)
   },
   "params": {
-    "cacheID": "1baf651955bc490e7818d24ac1c3684a",
+    "cacheID": "9cbd300f34528e358086554ae6caf8cf",
     "id": null,
     "metadata": {},
     "name": "projectSettingsPageQuery",
     "operationKind": "query",
-    "text": "query projectSettingsPageQuery(\n  $id: ID!\n) {\n  project(id: $id) {\n    id\n    name\n    question\n    workflow {\n      nodes {\n        id\n        kind\n        title\n        subtitle\n        datasetId\n        position {\n          x\n          y\n        }\n      }\n      links {\n        id\n        source\n        target\n      }\n      operationSpecJson\n      requestDataJson\n      payloadSchemaJson\n    }\n  }\n}\n"
+    "text": "query projectSettingsPageQuery(\n  $id: ID!\n) {\n  project(id: $id) {\n    id\n    name\n    question\n    workflow {\n      nodes {\n        id\n        kind\n        title\n        subtitle\n        datasetId\n        position {\n          x\n          y\n        }\n      }\n      links {\n        id\n        source\n        target\n        intent\n      }\n      operationSpecJson\n      requestDataJson\n      payloadSchemaJson\n    }\n  }\n}\n"
   }
 };
 })();
 
-(node as any).hash = "ed8e671a9e836f5acc01e1367045ae6b";
+(node as any).hash = "ab838f571f5d0e2ccc107363c614375c";
 
 export default node;

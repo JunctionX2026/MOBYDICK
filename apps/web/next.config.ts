@@ -2,6 +2,7 @@ import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  allowedDevOrigins: ["renae-unbuffed-dione.ngrok-free.dev"],
   transpilePackages: ["@mobydick/design-system", "@mobydick/icon"],
   typedRoutes: true,
   compiler: {

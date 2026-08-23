@@ -27,14 +27,14 @@ brief  →  spec  →  구현  →  스펙 상태 갱신
 | ---------------------------------------------------------------------------------------- | ---------------------------------- | ------- |
 | [`product/brief.md`](product/brief.md)                                                   | 제품 정의와 범위                   | `agreed` |
 | [`product/glossary.md`](product/glossary.md)                                             | 도메인 용어 · 그래프 모델 · 식별자 규칙 | `agreed` |
-| [`features/010-seam-suggestion-to-canvas.md`](features/010-seam-suggestion-to-canvas.md) | 접합부 A: 제안 → 캔버스            | `draft` |
+| [`features/010-seam-suggestion-to-canvas.md`](features/010-seam-suggestion-to-canvas.md) | 접합부 A: 제안 → 캔버스            | `agreed` |
 | [`features/011-seam-workflow-to-deployment.md`](features/011-seam-workflow-to-deployment.md) | 접합부 B: 워크플로 → 배포      | `implemented` |
 | [`features/001-graph-knowledge-base.md`](features/001-graph-knowledge-base.md)            | ① 그래프 지식 베이스              | `draft` |
-| [`features/002-workflow-canvas.md`](features/002-workflow-canvas.md)                      | ② 워크플로 캔버스                 | `draft` |
+| [`features/002-workflow-canvas.md`](features/002-workflow-canvas.md)                      | ② 워크플로 캔버스                 | `agreed` |
 | [`features/003-serve-api-mcp.md`](features/003-serve-api-mcp.md)                          | ③ API / MCP 배포                  | `implemented` |
-| [`features/004-project.md`](features/004-project.md)                                      | 파이프를 담는 프로젝트 단위        | `agreed` |
+| [`features/004-project.md`](features/004-project.md)                                      | 파이프를 담는 프로젝트 단위        | `implemented` |
 
-| [`features/005-govdata-source.md`](features/005-govdata-source.md)                        | GovData Studio DuckDB 데이터 소스  | `agreed` |
+| [`features/005-govdata-source.md`](features/005-govdata-source.md)                        | GovData Studio DuckDB 데이터 소스  | `implemented` |
 
 접합부 스펙을 기능 스펙보다 먼저 확정해요. 접합부가 비어 있으면 세 기능이 따로 놀아요.
 

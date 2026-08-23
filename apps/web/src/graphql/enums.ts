@@ -1,19 +1,17 @@
 import type { ProjectPhase, WorkflowNodeKind } from "@mobydick/domain";
 
-export type GraphQLNodeKind = "SOURCE" | "TRANSFORM" | "JOIN" | "OUTPUT";
+export type GraphQLNodeKind = "SOURCE" | "OPERATION" | "OUTPUT";
 export type GraphQLProjectPhase = "DISCOVER" | "COMPOSE" | "SERVE";
 
 export const NODE_KIND_TO_GRAPHQL: Record<WorkflowNodeKind, GraphQLNodeKind> = {
   source: "SOURCE",
-  transform: "TRANSFORM",
-  join: "JOIN",
+  operation: "OPERATION",
   output: "OUTPUT",
 };
 
 export const NODE_KIND_FROM_GRAPHQL: Record<GraphQLNodeKind, WorkflowNodeKind> = {
   SOURCE: "source",
-  TRANSFORM: "transform",
-  JOIN: "join",
+  OPERATION: "operation",
   OUTPUT: "output",
 };
 

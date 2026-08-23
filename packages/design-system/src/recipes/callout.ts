@@ -40,7 +40,7 @@ export const calloutContentClassName = "flex min-w-0 flex-col gap-1";
 
 export const calloutTitleClassName = "font-semibold";
 
-export const calloutDescriptionClassName = "text-fg-neutral-muted";
+export const calloutDescriptionClassName = "break-keep text-fg-neutral-muted";
 
 export type CalloutRecipeProps = VariantProps<typeof calloutRootRecipe>;
 export type CalloutTone = NonNullable<CalloutRecipeProps["tone"]>;

@@ -5,7 +5,11 @@ import { AlertTriangleIcon, PlayFilledIcon, SendFilledIcon } from "@mobydick/ico
 import Link from "next/link";
 import { graphql, useLazyLoadQuery } from "react-relay";
 import { useEffect, useRef, useState } from "react";
-import { parseGovDataOperationSpec, parseGovDataPlan, type GovDataPlan } from "@mobydick/domain";
+import {
+  parseGovDataOperationSpec,
+  parseGovDataPlan,
+  type GovDataPlan,
+} from "@mobydick/domain";
 import type { projectShellQuery } from "@/__generated__/relay/projectShellQuery.graphql";
 import { ClientQuery } from "@/relay/client-query";
 import { Playground } from "./playground";
@@ -36,6 +40,7 @@ const ProjectQuery = graphql`
           id
           source
           target
+          intent
         }
         operationSpecJson
         requestDataJson
@@ -107,12 +112,12 @@ function parseStoredOperationSpec(value: string | null | undefined) {
 
 function ProjectToolbar({ description, name, phase, projectId }: { description: string; name: string; phase: string; projectId: string }) {
   const [deploymentOpen, setDeploymentOpen] = useState(false);
-  const { executeLastNode, execution, nodes } = useWorkflow();
+  const { canDeploy, executeLastNode, execution, nodes } = useWorkflow();
   const badge = phaseBadge(phase);
   const executionDisabled = nodes.length === 0 || execution.status === "running";
 
   return (
-    <header className="border-stroke-neutral-subtle bg-bg-layer-floating shadow-elevation-floating relative z-20 mx-4 mt-4 flex min-h-14 shrink-0 items-center justify-between gap-4 rounded-surface border px-4 py-2.5">
+    <header className="border-stroke-neutral-subtle bg-bg-layer-side-navigation shadow-elevation-floating relative z-20 mx-4 mt-4 flex min-h-14 shrink-0 items-center justify-between gap-4 rounded-surface border px-4 py-2.5">
       <div className="relative flex min-w-0 flex-1 items-center gap-2">
         <h1 className="text-fg-neutral max-w-[35%] shrink-0 truncate text-sm font-semibold">{name}</h1>
         <Badge emphasis="weak" size="small" tone={badge.tone}>
@@ -137,9 +142,10 @@ function ProjectToolbar({ description, name, phase, projectId }: { description: 
         </Button>
         <Button
           className="h-7 gap-0.5 px-2 text-xs [&_svg]:size-3.5"
+          disabled={!canDeploy}
           size="small"
           onClick={() => setDeploymentOpen(true)}
-          title="API·MCP 배포 주소 만들기"
+          title={canDeploy ? "API·MCP 배포 주소 만들기" : "저장된 실행 파이프라인이 없어 배포할 수 없어요."}
           variant="outline"
         >
           <SendFilledIcon />
@@ -194,7 +200,7 @@ function UnsavedChangesGuard() {
 
 function ProjectToolbarSkeleton() {
   return (
-    <div className="border-stroke-neutral-subtle bg-bg-layer-floating shadow-elevation-floating relative z-20 mx-4 mt-4 flex min-h-14 shrink-0 items-center justify-between gap-4 rounded-surface border px-4 py-2.5">
+    <div className="border-stroke-neutral-subtle bg-bg-layer-side-navigation shadow-elevation-floating relative z-20 mx-4 mt-4 flex min-h-14 shrink-0 items-center justify-between gap-4 rounded-surface border px-4 py-2.5">
       <div className="flex min-w-0 flex-1 items-center gap-2">
         <Skeleton className="h-4 w-40" />
         <Skeleton className="h-3 w-64 max-w-[40%]" />
@@ -208,12 +214,18 @@ function ProjectToolbarSkeleton() {
   );
 }
 
-function ProjectPlanner({ question, hasNodes }: { question: string; hasNodes: boolean }) {
-  const { applyPipeline } = useWorkflow();
+const PROJECT_PLANNER_TIMEOUT_MS = 35_000;
+
+function ProjectPlanner({ question }: { question: string }) {
+  const { applyPipeline, nodes } = useWorkflow();
+  const applyPipelineRef = useRef(applyPipeline);
   const attempted = useRef(false);
   const [plan, setPlan] = useState<GovDataPlan | null>(null);
   const [status, setStatus] = useState<"idle" | "planning" | "ready" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
+  const hasNodes = nodes.length > 0;
+
+  applyPipelineRef.current = applyPipeline;
 
   useEffect(() => {
     if (hasNodes || attempted.current) {
@@ -222,14 +234,31 @@ function ProjectPlanner({ question, hasNodes }: { question: string; hasNodes: bo
 
     attempted.current = true;
     setStatus("planning");
+    const controller = new AbortController();
+    let timedOut = false;
+    const timeoutId = window.setTimeout(() => {
+      timedOut = true;
+      controller.abort();
+      setError("플래너 응답이 너무 늦어요. 데이터 소스 연결과 planner 상태를 확인해 주세요.");
+      setStatus("error");
+    }, PROJECT_PLANNER_TIMEOUT_MS);
 
     void fetch("/api/govdata/plan", {
       body: JSON.stringify({ query: question }),
       headers: { "content-type": "application/json" },
       method: "POST",
+      signal: controller.signal,
     })
       .then(async (response) => {
+        if (timedOut || controller.signal.aborted) {
+          return;
+        }
+
         const payload: unknown = await response.json();
+
+        if (timedOut || controller.signal.aborted) {
+          return;
+        }
 
         if (!response.ok) {
           throw new Error("질문을 파이프라인으로 바꾸지 못했어요.");
@@ -242,7 +271,7 @@ function ProjectPlanner({ question, hasNodes }: { question: string; hasNodes: bo
         }
 
         setPlan(parsed);
-        applyPipeline(
+        applyPipelineRef.current(
           parsed.pipeline.nodes.map<CanvasNode>((node) => ({
             datasetId: node.datasetId,
             id: node.id,
@@ -251,23 +280,36 @@ function ProjectPlanner({ question, hasNodes }: { question: string; hasNodes: bo
             subtitle: node.subtitle,
             title: node.title,
           })),
-          parsed.pipeline.links.map<CanvasLink>((link) => ({ ...link })),
+          parsed.pipeline.links.map<CanvasLink>((link) => ({ ...link, intent: link.intent })),
           parsed,
         );
         setStatus("ready");
       })
       .catch((reason: unknown) => {
+        if (timedOut || controller.signal.aborted) {
+          return;
+        }
+
         setError(reason instanceof Error ? reason.message : "파이프라인을 만들지 못했어요.");
         setStatus("error");
+      })
+      .finally(() => {
+        window.clearTimeout(timeoutId);
       });
-  }, [applyPipeline, hasNodes, question]);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      controller.abort();
+      attempted.current = false;
+    };
+  }, [hasNodes, question]);
 
   if (status === "idle") {
     return null;
   }
 
   return (
-    <div className="border-stroke-neutral-subtle bg-bg-layer-floating mx-4 mt-3 rounded-surface border px-3 py-2 text-sm">
+    <div className="border-stroke-neutral-subtle bg-bg-layer-side-navigation mx-4 mt-3 rounded-surface border px-3 py-2 text-sm">
       {status === "planning" && (
         <div className="text-fg-neutral-muted flex items-center gap-2" role="status">
           <Spinner aria-hidden label="" size="small" variant="secondary" />
@@ -277,8 +319,16 @@ function ProjectPlanner({ question, hasNodes }: { question: string; hasNodes: bo
       {status === "ready" && plan != null && (
         <details>
           <summary className="text-fg-neutral cursor-pointer font-medium">
-            {plan.title} · 결과 {plan.result.rowCount.toLocaleString("ko-KR")}행
+            {plan.title} · {plan.planner === "openai" ? "OpenAI 계획" : "검증된 fallback"} · 결과 {plan.result.rowCount.toLocaleString("ko-KR")}행
           </summary>
+          {plan.planner === "fallback" && (
+            <Callout className="mt-2" tone="warning">
+              <Callout.Content>
+                <Callout.Title>검증된 fallback 계획으로 계속했어요</Callout.Title>
+                <Callout.Description>{plan.plannerError ?? "OpenAI planner를 사용할 수 없어 결정적 추천으로 전환했어요."}</Callout.Description>
+              </Callout.Content>
+            </Callout>
+          )}
           <p className="text-fg-neutral-muted mt-1">{plan.explanation}</p>
           <pre className="text-fg-neutral-muted mt-2 max-h-32 overflow-auto text-xs">
             {JSON.stringify(plan.result.output ?? plan.result.rows.slice(0, 5), null, 2)}
@@ -309,7 +359,8 @@ function ProjectWorkspace({ projectId }: { projectId: string }) {
 
   return (
     <WorkflowProvider
-      initialLinks={workflow.links}
+      key={projectId}
+      initialLinks={workflow.links.map((link) => ({ ...link, intent: link.intent ?? null }))}
       initialNodes={nodes}
       initialOperationSpec={initialOperationSpec}
       initialPayloadSchema={initialPayloadSchema}
@@ -322,7 +373,7 @@ function ProjectWorkspace({ projectId }: { projectId: string }) {
         <ProjectNavigation name={name} projectId={projectId} question={question} />
         <SideNavigation.Inset className="bg-bg-layer-basement">
           <ProjectToolbar description={question} name={name} phase={phase} projectId={projectId} />
-          <ProjectPlanner hasNodes={nodes.length > 0} question={question} />
+          <ProjectPlanner question={question} />
           {droppedCount > 0 && (
             <div className="border-stroke-neutral-subtle border-b p-3">
               <Callout tone="warning">
@@ -339,7 +390,7 @@ function ProjectWorkspace({ projectId }: { projectId: string }) {
             </div>
           )}
           <div className="min-h-0 flex-1">
-            <Playground />
+            <Playground question={question} />
           </div>
         </SideNavigation.Inset>
       </div>

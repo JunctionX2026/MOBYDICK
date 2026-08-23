@@ -11,9 +11,7 @@ import json
 import math
 import os
 import re
-import subprocess
 import sys
-import tempfile
 import threading
 from collections import defaultdict
 from pathlib import Path
@@ -21,6 +19,7 @@ from typing import Any
 
 import duckdb
 import numpy as np
+import requests
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "data"
@@ -263,6 +262,41 @@ class Catalog:
                 if h["dataset_id"] not in merged or merged[h["dataset_id"]]["score"] < h["score"]:
                     h["matched_part"] = part if i else None
                     merged[h["dataset_id"]] = h
+
+        if re.search(r"폭염|더위|기온|온도|heat|temperature", q, re.I):
+            region = query_region(q)
+            regional = [
+                d for d in self.datasets
+                if region is None or d.get("default_sgg") in (None, region)
+            ]
+            priorities = (
+                re.compile(r"노령|고령|노인"),
+                re.compile(r"기상|기온|온도|날씨"),
+                re.compile(r"대피|쉼터|보호"),
+            )
+            forced: list[dict] = []
+            for pattern in priorities:
+                matches = [d for d in regional if pattern.search(d["title_ko"])]
+                matches.sort(key=lambda d: ("지역별" not in d["title_ko"], -d["rows"]))
+                if matches:
+                    forced.append(matches[0])
+
+            next_score = max((float(h["score"]) for h in merged.values()), default=0.0) + 1.0
+            for offset, dataset in enumerate(forced):
+                hit = merged.get(dataset["dataset_id"])
+                if hit is None:
+                    merged[dataset["dataset_id"]] = {
+                        **self.summary(dataset),
+                        "score": round(next_score - offset * 0.01, 3),
+                        "cosine": 0.0,
+                        "bm25": 0.0,
+                        "confidence": "high",
+                        "matched_column": None,
+                        "matched_part": q,
+                    }
+                else:
+                    hit["score"] = round(next_score - offset * 0.01, 3)
+
         out = sorted(merged.values(), key=lambda h: -h["score"])
         seeds = self.best_combo(per_part, prefer) if per_part else [h["dataset_id"] for h in out[:3]]
         # seed 는 맨 앞으로
@@ -448,7 +482,7 @@ class Compiler:
             return f"count(*) FILTER (WHERE {self.q(col)} = '{v}') AS {name}"
         return f"{agg}(TRY_CAST(REPLACE({self.q(col)}, ',', '') AS DOUBLE)) AS {name}"
 
-    def compile(self, spec: dict) -> tuple[str, list, list[dict]]:
+    def compile(self, spec: dict, include_limit: bool = True) -> tuple[str, list, list[dict]]:
         srcs = spec.get("sources") or []
         if not srcs:
             raise ValueError("spec.sources is empty")
@@ -504,23 +538,37 @@ class Compiler:
         ob = spec.get("order_by") or []
         if ob:
             sql += " ORDER BY " + ", ".join(f"{self.q(o['name'])} {'DESC' if o.get('desc') else 'ASC'}" for o in ob)
-        sql += f" LIMIT {int(spec.get('limit', 100))}"
+        if include_limit:
+            sql += f" LIMIT {int(spec.get('limit', 100))}"
         return sql, params, meta
 
     def run(self, spec: dict, output_schema: dict | None = None) -> dict:
         sql, params, meta = self.compile(spec)
+        stats_sql, stats_params, _ = self.compile(spec, include_limit=False)
         with self._lock:
             cur = self.con.execute(sql, params)
             cols = [d[0] for d in cur.description]
             rows = cur.fetchall()
+            null_sql = ", ".join(
+                ["COUNT(*)"]
+                + [f"COUNT(*) - COUNT({self.q(column)})" for column in cols]
+            )
+            null_stats = self.con.execute(
+                f"SELECT {null_sql} FROM ({stats_sql}) AS result",
+                stats_params,
+            ).fetchone()
             dropped = self._dropped_detail(meta) if len(meta) > 1 else []
         def clean(v):
             if isinstance(v, float) and (math.isnan(v) or math.isinf(v)):
                 return None
             return v
         cleaned_rows = [[clean(v) for v in r] for r in rows]
+        full_row_count = int(null_stats[0]) if null_stats is not None else 0
+        null_count = sum(int(value) for value in (null_stats[1:] if null_stats is not None else ()))
+        cell_count = full_row_count * len(cols)
         result = {"sql": sql, "params": params, "columns": cols,
                   "rows": cleaned_rows, "row_count": len(cleaned_rows),
+                  "null_rate": round(null_count / cell_count, 4) if cell_count else 0.0,
                   "sources": [{k: m[k] for k in ("alias", "dataset_id", "title")} for m in meta],
                   "dropped_detail": dropped}
 
@@ -553,23 +601,47 @@ class Compiler:
     def _dropped_detail(self, meta: list[dict]) -> list[dict]:
         """각 소스의 정규화 키 집합을 구해 교집합에 못 든 키를 보고한다."""
         keysets = []
+        missing_key_counts = []
         for m in meta:
             w = (" WHERE " + " AND ".join(m["where"])) if m["where"] else ""
             rows = self.con.execute(
                 f"SELECT DISTINCT {m['key_expr']} AS k FROM {self.q(m['table'])}{w}", m["params"]).fetchall()
             keysets.append({r[0] for r in rows if r[0] is not None})
+            missing_where = f"{w} AND {m['key_expr']} IS NULL" if w else f" WHERE {m['key_expr']} IS NULL"
+            missing_key_counts.append(
+                int(
+                    self.con.execute(
+                        f"SELECT COUNT(*) FROM {self.q(m['table'])}{missing_where}", m["params"]
+                    ).fetchone()[0]
+                )
+            )
         inter = set.intersection(*keysets) if keysets else set()
         out = []
-        for m, ks in zip(meta, keysets):
+        for m, ks, missing_key_count in zip(meta, keysets, missing_key_counts):
             missing = sorted(ks - inter)
+            reason_code = (
+                "missing_normalized_key"
+                if missing_key_count > 0
+                else "unmatched_normalized_key"
+                if missing
+                else None
+            )
+            key_count = len(ks) + (1 if missing_key_count > 0 else 0)
             out.append({"alias": m["alias"], "dataset_id": m["dataset_id"], "title": m["title"],
-                        "keys": len(ks), "matched": len(inter),
-                        "match_rate": round(len(inter) / len(ks), 3) if ks else 0.0,
-                        "dropped": len(missing), "dropped_keys": missing[:30]})
+                        "keys": key_count, "matched": len(inter),
+                        "match_rate": round(len(inter) / key_count, 3) if key_count else 0.0,
+                        "dropped": len(missing) + (1 if missing_key_count > 0 else 0),
+                        "dropped_keys": missing[:30], "reason_code": reason_code})
         return out
 
 
-def suggest_spec(cat: Catalog, members: list[str], level: str, links: list[dict]) -> dict:
+def suggest_spec(
+    cat: Catalog,
+    members: list[str],
+    level: str,
+    links: list[dict],
+    query: str | None = None,
+) -> dict:
     """조인 집합 → 기본 OperationSpec (각 소스 count, 첫 numeric 컬럼 sum)"""
     keycol: dict[str, str] = {}
     for l in links:
@@ -583,8 +655,11 @@ def suggest_spec(cat: Catalog, members: list[str], level: str, links: list[dict]
         good = re.compile(r"(co|cnt|count|nmpr|popltn|total|sum|amt|ar|cpcty|qy|capct|area|psncpa|price|rate|aceptnc)", re.I)
         num = [c for c in ds["numeric_columns"] if not bad.search(c.lower()) and c not in ("spm_row", "ts_row", "innerTableRowNum")]
         num.sort(key=lambda c: (0 if good.search(c) else 1))
+        if query and re.search(r"폭염|더위|기온|온도|heat|temperature", query, re.I):
+            temperature = [c for c in num if re.search(r"max_?temperature|temperature|tmprt|기온|온도", c, re.I)]
+            num = temperature[:1] + [c for c in num if c not in temperature[:1]]
         if num:
-            agg = "avg" if re.search(r"(dnsty|avg|mean|rate|ratio|temp|pm10|pm25|price|prc|unit)", num[0], re.I) else "sum"
+            agg = "avg" if re.search(r"(dnsty|avg|mean|rate|ratio|temp|tmprt|pm10|pm25|price|prc|unit)", num[0], re.I) else "sum"
             metrics.append({"name": f"{alias}_{agg}_{num[0]}"[:40], "agg": agg, "column": num[0]})
         yn = [c for c in ds["columns"] if c["role"] == "text" and c.get("samples") and set(c["samples"]) <= {"Y", "N", "y", "n"}]
         for c in yn[:1]:
@@ -595,14 +670,20 @@ def suggest_spec(cat: Catalog, members: list[str], level: str, links: list[dict]
     return {"sources": sources, "join": "inner", "order_by": [{"name": "a_count", "desc": True}], "limit": 100}
 
 
-def single_spec(cat: Catalog, did: str, prefer: str | None = None, region: str | None = None) -> dict:
+def single_spec(
+    cat: Catalog,
+    did: str,
+    prefer: str | None = None,
+    region: str | None = None,
+    query: str | None = None,
+) -> dict:
     """한 데이터셋용 기본 스펙: 지역키가 있으면 지역별 집계, 없으면 원시 컬럼.
     질문에 시군이 있고 데이터셋이 광역이면 그 시군으로 필터하고 읍면동으로 내려간다."""
     ds = cat.by_id[did]
     rk = ds.get("region_keys") or {}
     if region and not ds.get("default_sgg") and rk.get("sgg"):
         lvl = "emd" if rk.get("emd") else "sgg"
-        spec = suggest_spec(cat, [did], lvl, [])
+        spec = suggest_spec(cat, [did], lvl, [], query)
         spec["sources"][0]["key"] = {"column": rk[lvl], "level": lvl}
         spec["sources"][0]["filters"] = [{"column": rk["sgg"], "op": "like", "value": f"%{region[:-1]}%"}]
         return spec
@@ -624,6 +705,9 @@ column names given in the context. Include every distinct concept needed to answ
 verified joinable sets contain it. Do not collapse a multi-concept policy question into one convenient
 dataset. For heat-risk or vulnerability questions, prefer an 읍면동 (emd) plan and include population,
 weather or temperature, and shelter or evacuation resources when those verified candidates exist.
+When a resource or evacuation dataset has incomplete regional coverage, prefer a left join so the
+population and weather base regions remain visible; use an inner join only when missing regions must
+be excluded. Preserve the partial-coverage warning in the result instead of inventing resource values.
 Keys use level \"sgg\" for city/county (시군구), \"emd\" for town (읍면동), and \"raw\" for exact-value keys.
 Metrics use count|sum|avg|min|max|count_distinct|count_if. Filters use =, !=, >, <, >=, <=, like, or in.
 Every identifier must contain only letters, numbers, Korean characters, or underscores. Do not use null
@@ -831,10 +915,12 @@ def _planner_contract_error(plan: Any) -> str | None:
     return _operation_spec_contract_error(plan.get("spec"))
 
 
-def _codex_enabled() -> bool:
-    return os.environ.get("GOVDATA_AI_ENABLED", "false").lower() == "true" and os.environ.get(
-        "GOVDATA_AI_PROVIDER", "codex"
-    ).lower() == "codex"
+def _ai_enabled() -> bool:
+    return (
+        os.environ.get("GOVDATA_AI_ENABLED", "false").lower() == "true"
+        and os.environ.get("GOVDATA_AI_PROVIDER", "openai").lower() == "openai"
+        and bool(os.environ.get("OPENAI_API_KEY", "").strip())
+    )
 
 
 def _planner_intent_hints(query: str) -> list[str]:
@@ -874,94 +960,97 @@ def _planner_context(cat: Catalog, query: str, candidates: list[dict], sets: lis
     }
 
 
-def _codex_message(stdout: str) -> str:
-    latest = ""
-    for line in stdout.splitlines():
-        if not line.strip():
+def _responses_output_text(payload: dict[str, Any]) -> str:
+    output_text = payload.get("output_text")
+    if isinstance(output_text, str) and output_text.strip():
+        return output_text.strip()
+
+    chunks: list[str] = []
+    for item in payload.get("output", []):
+        if not isinstance(item, dict):
             continue
-        try:
-            event = json.loads(line)
-        except json.JSONDecodeError:
-            continue
-        item = event.get("item") if isinstance(event, dict) else None
-        if isinstance(item, dict) and item.get("type") == "agent_message" and isinstance(item.get("text"), str):
-            latest = item["text"]
-    return latest or stdout.strip()
+        for content in item.get("content", []):
+            if not isinstance(content, dict):
+                continue
+            if content.get("type") == "refusal":
+                raise RuntimeError("OpenAI planner refused to create an execution plan")
+            text = content.get("text")
+            if content.get("type") == "output_text" and isinstance(text, str):
+                chunks.append(text)
+
+    if chunks:
+        return "".join(chunks).strip()
+
+    raise RuntimeError("OpenAI planner returned no structured output")
 
 
-def _json_object(text: str) -> dict:
-    message = _codex_message(text).strip()
-    candidates = [message]
-    unfenced = re.sub(r"^```(?:json)?\s*|\s*```$", "", message, flags=re.I)
-    if unfenced not in candidates:
-        candidates.append(unfenced)
-    start, end = message.find("{"), message.rfind("}")
-    if start >= 0 and end > start:
-        candidates.append(message[start : end + 1])
+def _openai_plan_payload(prompt: str) -> dict[str, Any]:
+    return {
+        "model": os.environ.get("OPENAI_API_MODEL", "gpt-5.6-luna"),
+        "input": [
+            {
+                "role": "system",
+                "content": PLAN_SYSTEM,
+            },
+            {
+                "role": "user",
+                "content": prompt,
+            },
+        ],
+        "reasoning": {
+            "effort": os.environ.get("OPENAI_REASONING_EFFORT", "low"),
+        },
+        "max_output_tokens": 4096,
+        "text": {
+            "format": {
+                "type": "json_schema",
+                "name": "govdata_plan",
+                "strict": True,
+                "schema": PLAN_OUTPUT_SCHEMA,
+            }
+        },
+    }
 
-    for candidate in candidates:
-        try:
-            value = json.loads(candidate)
-        except json.JSONDecodeError:
-            continue
-        if isinstance(value, dict):
-            return value
 
-    raise RuntimeError("Codex headless planner returned invalid JSON")
-
-
-def codex_plan(cat: Catalog, query: str, candidates: list[dict], sets: list[dict]) -> dict:
+def openai_plan(cat: Catalog, query: str, candidates: list[dict], sets: list[dict]) -> dict:
     context = _planner_context(cat, query, candidates, sets)
     prompt = "\n\n".join(
         [
             PLAN_SYSTEM,
-            "Run no tools and do not read or write files. Return exactly one JSON object matching this schema:",
-            json.dumps(PLAN_OUTPUT_SCHEMA, ensure_ascii=False),
+            "Use only the verified datasets and columns in the planning context. Return the structured plan only.",
             "Planning context:",
             json.dumps(context, ensure_ascii=False),
         ]
     )
-    command = os.environ.get("CODEX_CLI_PATH", "codex").strip() or "codex"
+    try:
+        response = requests.post(
+            os.environ.get("OPENAI_API_BASE_URL", "https://api.openai.com/v1/responses"),
+            headers={
+                "Authorization": f"Bearer {os.environ['OPENAI_API_KEY']}",
+                "Content-Type": "application/json",
+            },
+            json=_openai_plan_payload(prompt),
+            timeout=int(os.environ.get("GOVDATA_OPENAI_TIMEOUT_SECONDS", "30")),
+        )
+    except requests.RequestException as error:
+        raise RuntimeError("OpenAI planner request failed") from error
 
-    with tempfile.TemporaryDirectory(prefix="mobydick-codex-") as directory:
-        schema_path = Path(directory) / "planner-schema.json"
-        schema_path.write_text(json.dumps(PLAN_OUTPUT_SCHEMA), encoding="utf-8")
-        try:
-            completed = subprocess.run(
-                [
-                    command,
-                    "exec",
-                    "--ephemeral",
-                    "--json",
-                    "--sandbox",
-                    "read-only",
-                    "--skip-git-repo-check",
-                    "--output-schema",
-                    str(schema_path),
-                    "-C",
-                    directory,
-                ],
-                cwd=directory,
-                env=os.environ.copy(),
-                input=prompt,
-                capture_output=True,
-                text=True,
-                timeout=int(os.environ.get("GOVDATA_CODEX_TIMEOUT_SECONDS", "120")),
-                check=False,
-            )
-        except FileNotFoundError as error:
-            raise RuntimeError(f"Codex CLI was not found: {command}") from error
-        except subprocess.TimeoutExpired as error:
-            raise RuntimeError("Codex headless planner timed out") from error
+    try:
+        payload = response.json()
+    except ValueError as error:
+        raise RuntimeError("OpenAI planner returned invalid JSON") from error
 
-        if completed.returncode != 0:
-            detail = completed.stderr.strip()[-400:]
-            raise RuntimeError(f"Codex headless planner failed: {detail or completed.returncode}")
+    if not response.ok:
+        detail = payload.get("error", {}).get("message") if isinstance(payload, dict) else None
+        raise RuntimeError(f"OpenAI planner request failed: {detail or response.status_code}")
 
-        return _json_object(completed.stdout)
+    parsed = json.loads(_responses_output_text(payload))
+    if not isinstance(parsed, dict):
+        raise RuntimeError("OpenAI planner returned a non-object JSON value")
+    return parsed
 
 
-def pipeline_for_spec(cat: Catalog, spec: dict) -> dict:
+def pipeline_for_spec(cat: Catalog, spec: dict, question: str = "") -> dict:
     nodes = []
     links = []
     source_ids = []
@@ -982,37 +1071,41 @@ def pipeline_for_spec(cat: Catalog, spec: dict) -> dict:
             }
         )
 
-    tail = source_ids[0] if len(source_ids) == 1 else None
-    if len(source_ids) > 1:
-        join_id = "join-1"
-        nodes.append(
-            {
-                "id": join_id,
-                "kind": "JOIN",
-                "title": "검증된 지역 조인",
-                "subtitle": "실측 매칭 키로 결합",
-                "dataset_id": None,
-                "position": {"x": 336, "y": 128},
-            }
-        )
-        links.extend({"id": f"link-{source_id}-{join_id}", "source": source_id, "target": join_id} for source_id in source_ids)
-        tail = join_id
-
-    if tail is None:
+    if not source_ids:
         raise ValueError("OperationSpec has no sources")
 
-    transform_id = "transform-1"
+    operation_id = "operation-1"
+    levels = sorted({source.get("key", {}).get("level") for source in spec.get("sources", []) if source.get("key")})
+    level_label = {"sgg": "시군구", "emd": "읍면동", "raw": "원문 값"}
+    level_text = " · ".join(level_label[level] for level in levels if level in level_label) or "키 없음"
+    join_text = "단일 소스" if len(source_ids) == 1 else f"{spec.get('join', 'inner')} 조인"
     nodes.append(
         {
-            "id": transform_id,
-            "kind": "TRANSFORM",
-            "title": "질문 분석",
-            "subtitle": "선언적 OperationSpec 실행",
+            "id": operation_id,
+            "kind": "OPERATION",
+            "title": "질문 기반 조인·변환",
+            "subtitle": f"{level_text} 기준 · {join_text} · 선언적 조건",
             "dataset_id": None,
-            "position": {"x": 608, "y": 128},
+            "position": {"x": 336, "y": 128},
         }
     )
-    links.append({"id": f"link-{tail}-{transform_id}", "source": tail, "target": transform_id})
+    question_text = question.strip() or "추천 질문"
+    source_specs = spec.get("sources", [])
+    source_by_id = {f"source-{index + 1}": source for index, source in enumerate(source_specs)}
+    for source_id in source_ids:
+        source = source_by_id[source_id]
+        key = source.get("key") or {}
+        column = key.get("column") or "조인 키 없음"
+        level = level_label.get(key.get("level"), "기준 없음")
+        intent = f"질문: {question_text} · {source.get('alias', source_id)}의 {column}을 {level} 기준으로 조인·변환"
+        links.append(
+            {
+                "id": f"link-{source_id}-{operation_id}",
+                "source": source_id,
+                "target": operation_id,
+                "intent": intent,
+            }
+        )
 
     output_id = "output-1"
     nodes.append(
@@ -1022,8 +1115,15 @@ def pipeline_for_spec(cat: Catalog, spec: dict) -> dict:
             "title": "JSON 결과",
             "subtitle": "API · MCP 출력",
             "dataset_id": None,
-            "position": {"x": 880, "y": 128},
+            "position": {"x": 608, "y": 128},
         }
     )
-    links.append({"id": f"link-{transform_id}-{output_id}", "source": transform_id, "target": output_id})
+    links.append(
+        {
+            "id": f"link-{operation_id}-{output_id}",
+            "source": operation_id,
+            "target": output_id,
+            "intent": "조인·변환 결과를 JSON 결과로 전달",
+        }
+    )
     return {"nodes": nodes, "links": links}
