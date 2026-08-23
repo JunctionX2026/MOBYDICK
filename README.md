@@ -4,60 +4,68 @@
 
 **JunctionX Korea 2026 · Team 44 MOBYDICK · Microsoft Track**
 
-Swish는 흩어진 경상북도 공공데이터를 찾아서, 붙여서, API와 MCP로 내보내는 데이터 워크플로 서비스예요.
+Swish is a public-data workflow service that discovers scattered Gyeongsangbuk-do datasets, connects them, and serves the results through APIs and MCP.
 
-## 배경
+## Background
 
-공공데이터를 실제 서비스에 활용하려면 데이터 탐색, 활용 신청, 키 발급, 형식 확인을 데이터마다 반복해야 해요. 같은 지역도 이름과 행정코드가 제각각이고 시간·측정 단위도 달라서, 여러 데이터를 연결할 때 누락과 잘못된 조인이 조용히 발생해요. 완성한 분석도 API나 MCP로 다시 구성해야 하므로 재사용하기 어려워요.
+Using public data in a real service requires teams to repeat dataset discovery, access requests, API key issuance, and format validation for every source. Regional names and administrative codes are inconsistent, while time and measurement units differ across datasets. These differences can cause silent data loss and invalid joins. Even after an analysis is complete, turning it into a reusable API or MCP server requires additional work.
 
-## 해결
+## Solution
 
-Swish는 발견부터 배포까지 하나의 직렬 파이프로 연결해요.
+Swish connects discovery, composition, and deployment as one sequential pipeline.
 
-| 단계 | 하는 일 | 결과 |
+| Stage | What Swish does | Result |
 | --- | --- | --- |
-| **Discover** | 질문을 바탕으로 카탈로그에서 관련 데이터와 컬럼을 추천해요. | 데이터셋과 조인 후보를 만들어요. |
-| **Compose** | 캔버스에서 데이터를 연결하고 지역코드 정규화, 조인, 변환을 실행해요. | 행 수, 결측률, 매칭률과 제외 사유를 단계마다 확인해요. |
-| **Serve** | 검증된 워크플로 스냅샷을 배포해요. | 같은 결과를 REST API와 MCP로 제공해요. |
+| **Discover** | Recommends relevant datasets and columns from a user's question. | Dataset and join candidates |
+| **Compose** | Connects data on a visual canvas and runs regional-code normalization, joins, and transformations. | Step-level row counts, null rates, match rates, and exclusion reasons |
+| **Serve** | Deploys a validated workflow snapshot. | Reusable REST API and MCP endpoints |
 
-AI는 실행할 코드를 만들지 않고 선언적 `OperationSpec`만 제안해요. 실제 계산은 검증된 결정적 코드가 담당하며, 행 수 급감이나 낮은 매칭률 같은 품질 문제는 사용자에게 정지 신호로 보여줘요.
+AI proposes only a declarative `OperationSpec`; it never produces code for execution. Deterministic, validated code performs the computation, and quality issues such as sharp row-count drops or low match rates become visible stop signals.
 
-## 기대 효과
+## Expected Impact
 
-- 질문에서 활용 가능한 공공데이터까지 도달하는 탐색 시간을 줄여요.
-- 지역명과 코드가 다른 데이터도 정규화해 안전하게 연결해요.
-- 중간 결과와 탈락 사유를 드러내 데이터 품질을 직접 판단할 수 있게 해요.
-- 완성한 분석을 API와 MCP로 즉시 재사용해 반복 업무와 AI 활용을 연결해요.
+- Reduce the time from a question to usable public datasets.
+- Safely connect sources with inconsistent regional names and codes.
+- Make intermediate results and exclusion reasons visible for direct quality review.
+- Turn completed analyses into reusable APIs and MCP tools for recurring work and AI workflows.
 
-## 테크 스펙
+## Tech Stack
 
-| 영역 | 기술 | 역할 |
+| Area | Technology | Role |
 | --- | --- | --- |
-| Web | Next.js App Router, React, TypeScript, Tailwind CSS | 프로젝트와 워크플로 캔버스를 제공해요. |
-| API | GraphQL, Relay | 프로젝트와 워크플로 상태를 읽고 저장해요. |
-| Data | FastAPI, DuckDB | 공공데이터 검색, 조인, 변환을 실행해요. |
-| AI | OpenAI Responses API, Structured Outputs | 질문을 검증 가능한 선언적 스펙으로 변환해요. |
-| Infra | Cloudflare Workers, Containers, D1 | 웹, 데이터 런타임, 프로젝트 저장소를 운영해요. |
-| Tooling | pnpm workspace, Vitest | 모노레포 의존성과 계약 테스트를 관리해요. |
+| Web | Next.js App Router, React, TypeScript, Tailwind CSS | Project management and the workflow canvas |
+| API | GraphQL, Relay | Project and workflow state access |
+| Data | FastAPI, DuckDB | Public-data discovery, joins, and transformations |
+| AI | OpenAI Responses API, Structured Outputs | Conversion of user questions into validated declarative specs |
+| Infrastructure | Cloudflare Workers, Containers, D1 | Web runtime, data runtime, and project storage |
+| Tooling | pnpm workspace, Vitest | Monorepo dependency management and contract testing |
 
 ```text
-질문 → 데이터 추천 → 워크플로 조립·검증 → REST API / MCP
-       FastAPI + DuckDB       Next.js         Cloudflare
+Question → Dataset discovery → Workflow composition and validation → REST API / MCP
+           FastAPI + DuckDB    Next.js canvas                      Cloudflare
 ```
 
-## 로컬 실행
+## Local Development
 
-Node.js 22 이상과 pnpm이 필요해요. GovData 런타임의 자세한 준비 방법은 [로컬 개발 안내](docs/LOCAL_DEVELOPMENT.md)를 확인해요.
+Node.js 22 or later and pnpm are required. See the [local development guide](docs/LOCAL_DEVELOPMENT.md) for GovData runtime setup.
 
 ```bash
 pnpm install
 pnpm dev
 ```
 
-전체 검증은 아래 명령으로 실행해요.
+Run the full verification suite with:
 
 ```bash
 pnpm verify
 ```
 
-제품 계약은 [스펙 인덱스](specs/README.md), 저장소 탐색 경로는 [문서 안내](docs/README.md)에서 확인해요.
+See the [spec index](specs/README.md) for product contracts and the [documentation guide](docs/README.md) for repository navigation.
+
+## Team
+
+| Role | Name |
+| --- | --- |
+| Team Lead | Myeongheon Choi |
+| Team Member | Youngmin Kang |
+| Team Member | Hak Lee |
