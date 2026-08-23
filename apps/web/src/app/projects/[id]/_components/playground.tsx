@@ -276,10 +276,11 @@ function ExecutionDetailsDialog({
               <Callout tone="warning">
                 <Callout.Content>
                   <Callout.Description>
-                    {droppedDetails.map((detail) => (
-                      <p key={detail.datasetId}>
+                    {droppedDetails.map((detail, index) => (
+                      <span key={detail.datasetId}>
                         <span className="text-fg-neutral font-medium">{detail.alias}</span> · {droppedReasonText(detail.reasonCode)} 탈락 키: {droppedKeysText(detail.droppedKeys)}
-                      </p>
+                        {index < droppedDetails.length - 1 ? <br /> : null}
+                      </span>
                     ))}
                   </Callout.Description>
                 </Callout.Content>
