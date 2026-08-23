@@ -28,6 +28,7 @@ AI proposes only a declarative `OperationSpec`; it never produces code for execu
 - Safely connect sources with inconsistent regional names and codes.
 - Make intermediate results and exclusion reasons visible for direct quality review.
 - Turn completed analyses into reusable APIs and MCP tools for recurring work and AI workflows.
+- Expand the practical use of public data across Gyeongsangbuk-do and encourage more regional data-driven services.
 
 ## Tech Stack
 
