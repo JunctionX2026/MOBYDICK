@@ -1,18 +1,14 @@
-![Swish](apps/web/public/brand/swish-logo-horizontal.svg)
+# Swish
 
-<br/>
+![Swish](apps/web/public/brand/swish-logo-horizontal.svg)
 
 **JunctionX Korea 2026 · Team 44 MOBYDICK · Microsoft Track**
 
 Swish is a public-data workflow service that discovers scattered Gyeongsangbuk-do datasets, connects them, and serves the results through APIs and MCP.
 
-<br/>
-
 ## Background
 
 Using public data in a real service requires teams to repeat dataset discovery, access requests, API key issuance, and format validation for every source. Regional names and administrative codes are inconsistent, while time and measurement units differ across datasets. These differences can cause silent data loss and invalid joins. Even after an analysis is complete, turning it into a reusable API or MCP server requires additional work.
-
-<br/>
 
 ## Solution
 
@@ -26,8 +22,6 @@ Swish connects discovery, composition, and deployment as one sequential pipeline
 
 AI proposes only a declarative `OperationSpec`; it never produces code for execution. Deterministic, validated code performs the computation, and quality issues such as sharp row-count drops or low match rates become visible stop signals.
 
-<br/>
-
 ## Expected Impact
 
 - Reduce the time from a question to usable public datasets.
@@ -35,8 +29,6 @@ AI proposes only a declarative `OperationSpec`; it never produces code for execu
 - Make intermediate results and exclusion reasons visible for direct quality review.
 - Turn completed analyses into reusable APIs and MCP tools for recurring work and AI workflows.
 - Expand the practical use of public data across Gyeongsangbuk-do and encourage more regional data-driven services.
-
-<br/>
 
 ## Tech Stack
 
@@ -54,8 +46,6 @@ Question → Dataset discovery → Workflow composition and validation → REST 
            FastAPI + DuckDB    Next.js canvas                      Cloudflare
 ```
 
-<br/>
-
 ## Local Development
 
 Node.js 22 or later and pnpm are required. See the [local development guide](docs/LOCAL_DEVELOPMENT.md) for GovData runtime setup.
@@ -72,8 +62,6 @@ pnpm verify
 ```
 
 See the [spec index](specs/README.md) for product contracts and the [documentation guide](docs/README.md) for repository navigation.
-
-<br/>
 
 ## Team
 
