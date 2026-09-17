@@ -1,8 +1,14 @@
-# Swish
+<p align="center">
+  <img src="apps/web/public/brand/swish-logo-horizontal.svg" alt="Swish" />
+</p>
 
-![Swish](apps/web/public/brand/swish-logo-horizontal.svg)
+<p align="center">
+  <strong>JunctionX Korea 2026 · Team 44 MOBYDICK</strong>
+</p>
 
-**JunctionX Korea 2026 · Team 44 MOBYDICK · Microsoft Track**
+<p align="center">
+  <strong>Microsoft Track — 2nd Place</strong>
+</p>
 
 Swish is a public-data workflow service that discovers scattered Gyeongsangbuk-do datasets, connects them, and serves the results through APIs and MCP.
 
