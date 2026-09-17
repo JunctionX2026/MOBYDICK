@@ -28,6 +28,20 @@ Swish connects discovery, composition, and deployment as one sequential pipeline
 
 AI proposes only a declarative `OperationSpec`; it never produces code for execution. Deterministic, validated code performs the computation, and quality issues such as sharp row-count drops or low match rates become visible stop signals.
 
+<p align="center">
+  <a href="https://www.youtube.com/watch?v=t8OICP9yk68">
+    <img
+      src="https://img.youtube.com/vi/t8OICP9yk68/maxresdefault.jpg"
+      alt="Watch the video on YouTube"
+      width="720"
+    />
+  </a>
+</p>
+
+<p align="center">
+  <em>Click the thumbnail to watch on YouTube.</em>
+</p>
+
 ## Expected Impact
 
 - Reduce the time from a question to usable public datasets.
